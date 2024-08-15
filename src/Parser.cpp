@@ -89,6 +89,8 @@ std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> Parser::parseSourc
         auto fn = parseFunctionDecl();
 
         functions.emplace_back(std::move(fn));
+
+
     }
 
     for (auto &&fn : functions)

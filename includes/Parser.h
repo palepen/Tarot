@@ -10,7 +10,7 @@
 
 #define matchOrReturn(tok, msg) \
     if (nextToken.type != tok)  \
-        return report(nextToken.source, msg);
+        report(nextToken.source, msg); \
 
 inline std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning = false)
 {
@@ -32,8 +32,8 @@ public:
     {
     }
     void eatNextToken()
-    {
-        nextToken = lexer->getNextToken();
+    {   
+        nextToken = lexer->getNextToken();   
     }
 
     std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> parseSourceFile();
