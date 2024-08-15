@@ -36,7 +36,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 
 .PHONY: clean
 clean:
-	rm -r $(BUILD_DIR)
+	rm -r $(BUILD_DIR) $(TARGET_EXEC)
 
 # Include the dependency files for automatic rebuilds
 -include $(DEPS)

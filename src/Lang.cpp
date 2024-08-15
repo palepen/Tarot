@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "../includes/Lexer.h"
+#include "../includes/Parser.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,8 +21,11 @@ int main(int argc, char *argv[])
 
     Lexer lex(argv[1], line);
 
-    while (lex.idx < line.length())
+    Parser parse(lex);
+    std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> AST = parse.parseSourceFile();
+
+    for (auto &it : AST.first)
     {
-        std::cout << lex.getNextToken().to_string() << std::endl;
+        std::cout << "Identifer: " << it->identifier << std::endl;
     }
 }

@@ -31,9 +31,17 @@ struct Token
         case TokenType::IDENTIFIER:
             return value.has_value() ? value.value() : "identifier";
         case TokenType::LBRACE:
-            return "{";
+            return "LBrace";
         case TokenType::RBRACE:
-            return "}";
+            return "RBrace";
+        case TokenType::COLON:
+            return "Colon";
+        case TokenType::SEMICOLON:
+            return "SemiColon";
+        case TokenType::LPAREN:
+            return "LParen";
+        case TokenType::RPAREN:
+            return "RParen";
         default:
             return "single";
         }
