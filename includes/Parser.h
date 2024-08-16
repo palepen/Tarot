@@ -6,18 +6,13 @@
 #define varOrReturn(var, init) \
     auto var = (init);         \
     if (!var)                  \
-        return nullptr;
+        return nullptr;        
 
 #define matchOrReturn(tok, msg) \
     if (nextToken.type != tok)  \
-        report(nextToken.source, msg); \
+        report(nextToken.source, msg); 
 
-inline std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning = false)
-{
-    const auto &[file, line, col] = location;
-    std::cerr << file << ":" << line << ":" << col << ":" << (isWarning ? "warning: " : "error: ") << message << "\n";
-    return nullptr;
-}
+std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning = false);
 
 class Parser
 {

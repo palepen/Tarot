@@ -28,7 +28,11 @@ struct Token
             return "fn";
         case TokenType::VOID:
             return "void";
+            return "End Of File";
+        case TokenType::RETURN:
+            return "return";
         case TokenType::IDENTIFIER:
+            if(type == TokenType::EOFTOK) return "End Of File";
             return value.has_value() ? value.value() : "identifier";
         case TokenType::LBRACE:
             return "LBrace";

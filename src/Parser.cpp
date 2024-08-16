@@ -1,5 +1,12 @@
 #include "../includes/Parser.h"
 
+std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning)
+{
+    const auto &[file, line, col] = location;
+    std::cerr << file << ":" << line << ":" << col << ":" << (isWarning ? "warning: " : "error: ") << message << "\n";
+    return nullptr;
+}
+
 std::unique_ptr<FunctionalDecl> Parser::parseFunctionDecl()
 {
     SourceLocation location = nextToken.source;
@@ -24,7 +31,7 @@ std::unique_ptr<FunctionalDecl> Parser::parseFunctionDecl()
     matchOrReturn(TokenType::LBRACE, "Expected function Body");
     varOrReturn(block, parseBlock());
 
-    return std::make_unique<FunctionalDecl>(location, functionIdentifier, *type, std::move(block));
+    return std::make_unique<FunctionalDecl>(location, type ? functionIdentifier : "No Valid Name", *type, std::move(block));
 }
 
 std::optional<Type> Parser::parseType()
@@ -85,12 +92,10 @@ std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> Parser::parseSourc
             synchronizeOn(TokenType::FN);
             continue;
         }
-
         auto fn = parseFunctionDecl();
 
-        functions.emplace_back(std::move(fn));
-
-
+        if (fn)
+            functions.emplace_back(std::move(fn));
     }
 
     for (auto &&fn : functions)
@@ -105,5 +110,3 @@ std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> Parser::parseSourc
 
     return {std::move(functions), !incompleteAST && hasMainFunction};
 }
-
-

@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> AST = parse.parseSourceFile();
 
     for (auto &it : AST.first)
-    {
+    {        
         std::cout << "Identifer: " << it->identifier << std::endl;
     }
 }

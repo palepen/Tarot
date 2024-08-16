@@ -8,6 +8,7 @@ enum class TokenType : char
     IDENTIFIER,
     FN,
     VOID,
+    RETURN,
     EOFTOK = singleCharTokens[0],
     LPAREN = singleCharTokens[1],
     RPAREN = singleCharTokens[2],
