@@ -6,11 +6,11 @@
 #define varOrReturn(var, init) \
     auto var = (init);         \
     if (!var)                  \
-        return nullptr;        
+        return nullptr;
 
 #define matchOrReturn(tok, msg) \
     if (nextToken.type != tok)  \
-        report(nextToken.source, msg); 
+        report(nextToken.source, msg);
 
 std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning = false);
 
@@ -27,16 +27,25 @@ public:
     {
     }
     void eatNextToken()
-    {   
-        nextToken = lexer->getNextToken();   
+    {
+        nextToken = lexer->getNextToken();
     }
 
-    std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> parseSourceFile();
-    std::unique_ptr<FunctionalDecl> parseFunctionDecl();
+    std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> parseSourceFile();
+    std::unique_ptr<FunctionDecl> parseFunctionDecl();
     std::optional<Type> parseType();
     std::unique_ptr<Block> parseBlock();
+    std::unique_ptr<Statement> parseStatement();
+    std::unique_ptr<ReturnStatement> parseReturnStatement();
+    std::unique_ptr<Expression> parsePrimary();
+    std::unique_ptr<Expression> parsePostFixExpression();
+    std::unique_ptr<std::vector<std::unique_ptr<Expression>>> parseArgumentList();
+    std::unique_ptr<Expression> parseExpression();
+    std::unique_ptr<ParameterDecl> parseParamDecl();
+    std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> parseParameterList();
     void synchronizeOn(TokenType type);
-    
+    void synchronize();
+
 };
 
 #endif

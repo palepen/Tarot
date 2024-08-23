@@ -1,6 +1,4 @@
-#include <bits/stdc++.h>
 #include "../includes/Lexer.h"
-
 bool isSpace(char c)
 {
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
@@ -21,10 +19,29 @@ Token Lexer::getNextToken()
 
         while (isalnum(peekNextChar()))
             val += eatNextChar();
-        if (keywords.count(val))
+        if (keywords.count(val)){
             return Token{tokenStartLocation, keywords.at(val), std::move(val)};
-
+        }
         return Token{tokenStartLocation, TokenType::IDENTIFIER, std::move(val)};
+    }
+    
+    if(isdigit(currentChar)){
+        std::string value{currentChar};
+        while(isdigit(peekNextChar()))
+            value += eatNextChar();
+        
+        if(peekNextChar() != '.'){
+            return Token{tokenStartLocation, TokenType::NUMBER, value};
+        }    
+
+        value += eatNextChar();
+
+        if(!isdigit(peekNextChar())) 
+            return Token{tokenStartLocation, TokenType::UNK};
+
+        while(isdigit(peekNextChar())) value += eatNextChar();
+
+        return Token{tokenStartLocation, TokenType::NUMBER, value};
     }
 
     if (currentChar == '/' && peekNextChar() == '/')
@@ -56,6 +73,9 @@ TokenType Lexer::getTokenType(const char &currentChar)
     case ':':
         return TokenType::COLON;
         break;
+    case ';':
+        return TokenType::SEMICOLON;
+        break;
     case '\0':
         return TokenType::EOFTOK;
         break;
@@ -81,4 +101,3 @@ char Lexer::eatNextChar()
     }
     return source->buffer[idx++];
 }
-

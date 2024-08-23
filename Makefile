@@ -1,4 +1,4 @@
-TARGET_EXEC := lcc
+TARGET_EXEC := trt
 
 BUILD_DIR := ./build
 SRC_DIRS := ./src

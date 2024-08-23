@@ -11,7 +11,9 @@
 const std::unordered_map<std::string_view, TokenType>
     keywords = {
         {"fn", TokenType::FN},
-        {"void", TokenType::VOID}};
+        {"void", TokenType::VOID},
+        {"return", TokenType::RETURN}
+    };
 
 
 struct Token
@@ -28,7 +30,6 @@ struct Token
             return "fn";
         case TokenType::VOID:
             return "void";
-            return "End Of File";
         case TokenType::RETURN:
             return "return";
         case TokenType::IDENTIFIER:

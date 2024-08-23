@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/lcc",
+            "program": "${workspaceFolder}/trt",
             "args": ["hello.k"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

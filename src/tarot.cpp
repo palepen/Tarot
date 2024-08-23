@@ -21,11 +21,13 @@ int main(int argc, char *argv[])
 
     Lexer lex(argv[1], line);
 
+
     Parser parse(lex);
-    std::pair<std::vector<std::unique_ptr<FunctionalDecl>>, bool> AST = parse.parseSourceFile();
+
+    std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> AST = parse.parseSourceFile();
 
     for (auto &it : AST.first)
-    {        
-        std::cout << "Identifer: " << it->identifier << std::endl;
+    {
+        it->dump(0);
     }
 }
