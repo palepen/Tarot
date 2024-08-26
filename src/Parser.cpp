@@ -13,9 +13,9 @@ std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> Parser::parseSourceF
     std::vector<std::unique_ptr<FunctionDecl>> functions;
     while (nextToken.type != TokenType::EOFTOK)
     {
-        
         if (nextToken.type != TokenType::FN)
         {
+            report(nextToken.source, "Unexpected Token: " + nextToken.to_string());
             report(nextToken.source, "Only Function Declarations are Allowed");
             synchronizeOn(TokenType::FN);
             continue;
@@ -106,6 +106,8 @@ std::unique_ptr<Block> Parser::parseBlock()
         if (nextToken.type == TokenType::RBRACE)
             break;
         varOrReturn(stmt, parseStatement());
+    std::cout << nextToken.to_string() << std::endl;
+    
         if (!stmt)
         {
             synchronize();
@@ -116,13 +118,11 @@ std::unique_ptr<Block> Parser::parseBlock()
 
         statements.emplace_back(std::move(stmt));
     }
-
     matchOrReturn(TokenType::RBRACE, "Expected '}'");
     eatNextToken(); // }
-    
+
     matchOrReturn(TokenType::SEMICOLON, "Expected ';'");
-    eatNextToken(); // }
- 
+    eatNextToken(); // ;   
 
     return std::make_unique<Block>(location);
 }
@@ -138,13 +138,14 @@ void Parser::synchronizeOn(TokenType type)
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
+    
     if (nextToken.type == TokenType::RETURN)
         return parseReturnStatement();
 
     varOrReturn(expr, parseExpression());
 
     matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of expression")
-        eatNextToken();
+    eatNextToken();
 
     return expr;
 }
@@ -166,15 +167,14 @@ std::unique_ptr<ReturnStatement> Parser::parseReturnStatement()
     }
 
     matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of the return statement")
-        eatNextToken(); // ;
+    eatNextToken(); // ;
 
     return std::make_unique<ReturnStatement>(location, std::move(expr));
 }
 
 std::unique_ptr<Expression> Parser::parsePrimary()
 {
-    SourceLocation location;
-
+    SourceLocation location = nextToken.source;
     if (nextToken.type == TokenType::NUMBER)
     {
         auto literal = std::make_unique<NumberLiteral>(location, *nextToken.value);
@@ -195,8 +195,10 @@ std::unique_ptr<Expression> Parser::parsePrimary()
 std::unique_ptr<Expression> Parser::parsePostFixExpression()
 {
     varOrReturn(expr, parsePrimary());
+    
     if (nextToken.type != TokenType::LPAREN)
         return expr;
+
     SourceLocation location = nextToken.source;
     varOrReturn(argumentList, parseArgumentList());
 
@@ -261,7 +263,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> Parser::parseParame
     {
         if (nextToken.type == TokenType::RPAREN)
             break;
-        matchOrReturn(TokenType::IDENTIFIER, "Expected parameter Declclaration");
+        matchOrReturn(TokenType::IDENTIFIER, "Expected parameter Declaration");
 
         varOrReturn(parameterDecl, parseParamDecl());
 
