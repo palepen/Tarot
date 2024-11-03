@@ -3,6 +3,8 @@
 #include <vector>
 #include "Lexer.h"
 #include "Declaration.h"
+#include "Report.h"
+
 #define varOrReturn(var, init) \
     auto var = (init);         \
     if (!var)                  \
@@ -12,7 +14,6 @@
     if (nextToken.type != tok)  \
         report(nextToken.source, msg);
 
-std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning = false);
 
 class Parser
 {

@@ -1,12 +1,5 @@
 #include "../includes/Parser.h"
 
-std::nullptr_t report(SourceLocation location, std::string_view message, bool isWarning)
-{
-    const auto &[file, line, col] = location;
-    std::cerr << file << ":" << line << ":" << col << ":" << (isWarning ? "warning: " : "error: ") << message << "\n";
-    return nullptr;
-}
-
 std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> Parser::parseSourceFile()
 {
     bool hasMainFunction = false;
@@ -66,6 +59,8 @@ std::unique_ptr<FunctionDecl> Parser::parseFunctionDecl()
 std::optional<Type> Parser::parseType()
 {
     TokenType type = nextToken.type;
+    std::cout << nextToken.to_string() << std::endl;
+    std::cout << static_cast<int>(type) << std::endl;
 
     switch (type)
     {
@@ -106,8 +101,8 @@ std::unique_ptr<Block> Parser::parseBlock()
         if (nextToken.type == TokenType::RBRACE)
             break;
         varOrReturn(stmt, parseStatement());
-    std::cout << nextToken.to_string() << std::endl;
-    
+        std::cout << nextToken.to_string() << std::endl;
+
         if (!stmt)
         {
             synchronize();
@@ -122,7 +117,7 @@ std::unique_ptr<Block> Parser::parseBlock()
     eatNextToken(); // }
 
     matchOrReturn(TokenType::SEMICOLON, "Expected ';'");
-    eatNextToken(); // ;   
+    eatNextToken(); // ;
 
     return std::make_unique<Block>(location);
 }
@@ -138,14 +133,14 @@ void Parser::synchronizeOn(TokenType type)
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
-    
+
     if (nextToken.type == TokenType::RETURN)
         return parseReturnStatement();
 
     varOrReturn(expr, parseExpression());
 
     matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of expression")
-    eatNextToken();
+        eatNextToken();
 
     return expr;
 }
@@ -167,7 +162,7 @@ std::unique_ptr<ReturnStatement> Parser::parseReturnStatement()
     }
 
     matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of the return statement")
-    eatNextToken(); // ;
+        eatNextToken(); // ;
 
     return std::make_unique<ReturnStatement>(location, std::move(expr));
 }
@@ -195,7 +190,7 @@ std::unique_ptr<Expression> Parser::parsePrimary()
 std::unique_ptr<Expression> Parser::parsePostFixExpression()
 {
     varOrReturn(expr, parsePrimary());
-    
+
     if (nextToken.type != TokenType::LPAREN)
         return expr;
 

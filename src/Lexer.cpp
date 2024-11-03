@@ -1,4 +1,5 @@
 #include "../includes/Lexer.h"
+
 bool isSpace(char c)
 {
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';

@@ -47,6 +47,8 @@ struct Token
             return "LParen";
         case TokenType::RPAREN:
             return "RParen";
+        case TokenType::NUMBER:
+            return "Number";
         default:
             return "single";
         }

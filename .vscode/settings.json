@@ -107,6 +107,10 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
-    }
+        "stack": "cpp",
+        "__memory": "cpp",
+        "__verbose_abort": "cpp",
+        "print": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }

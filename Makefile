@@ -4,7 +4,7 @@ BUILD_DIR := ./build
 SRC_DIRS := ./src
 
 # Find all the C and C++ files we want to compile
-SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 
 # Prepends BUILD_DIR and appends .o to every src file
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
@@ -19,6 +19,9 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 # Compilation flags: include directories, dependency generation, and C++17 standard
 CPPFLAGS := $(INC_FLAGS) -MMD -MP
 CXXFLAGS := -std=c++17
+
+# Use llvm-config to get the necessary linking flags
+LDFLAGS := $(shell llvm-config --ldflags --libs)
 
 # Final build step: linking all object files into the executable
 $(TARGET_EXEC): $(OBJS)
