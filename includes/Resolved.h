@@ -71,9 +71,6 @@ struct ResolvedFunctionDecl : ResolvedDecl
     void dump(size_t level = 0) const override;
 };
 
-void ResolvedNumberLiteral::dump(size_t level) const {
-  std::cerr << indent(level) << "ResolvedNumberLiteral: '" << value << "'\n";
-}
 
 struct ResolvedDeclarationRefExpr : public ResolvedExpression
 {
@@ -83,9 +80,6 @@ struct ResolvedDeclarationRefExpr : public ResolvedExpression
     void dump(size_t level = 0) const override;
 };
 
-void ResolvedDeclarationRefExpr::dump(size_t level) const {
-    std::cerr << indent(level) << "ResolvedDeclRefExpr: @(" << decl->identifier << "\n";
-}
 
 struct ResolvedCallExpr : public ResolvedExpression 
 {
@@ -97,40 +91,7 @@ struct ResolvedCallExpr : public ResolvedExpression
     void dump(size_t level = 0) const override;
 };
 
-void ResolvedCallExpr::dump(size_t level) const 
-{
-    std::cerr << indent(level) << "ResolvedCallExpr: @(" << &callee << ")" << callee->identifier << "\n";
 
-    for(auto &&arg : arguments){
-        arg->dump(level + 1);
-    } 
-}
-
-
-void ResolvedBlock::dump(size_t level) const {
-    std::cerr << indent(level) << "ResolvedBlock\n";
-
-    for(auto &&stmt : statements) 
-    {
-        stmt->dump(level + 1);
-    }
-}
-
-
-void ResolvedParamDecl::dump(size_t level) const {
-    std::cerr << indent(level) << "ResolvedParamDecl: @(" << this << ")" << identifier << ":" << "\n";
-};
-
-
-void ResolvedFunctionDecl::dump(size_t level) const {
-    std::cerr << indent(level) << "ResolvedFunctionDecl: @(" << this << ")" << identifier << ":" << "\n";
-
-    for (auto &&params : params){
-        params->dump(level + 1);
-    }
-
-    body->dump(level + 1);
-}
 
 struct ResolvedReturnStmt : public ResolvedStatement {
   std::unique_ptr<ResolvedExpression> expr;
@@ -143,11 +104,5 @@ struct ResolvedReturnStmt : public ResolvedStatement {
   void dump(size_t level = 0) const override;
 };
 
-void ResolvedReturnStmt::dump(size_t level) const {
-  std::cerr << indent(level) << "ResolvedReturnStmt\n";
-
-  if (expr)
-    expr->dump(level + 1);
-}
 
 #endif
