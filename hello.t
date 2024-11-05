@@ -1,7 +1,7 @@
-fn main(): void {       
-      
+fn main(a: number): void {       
+    
 };
 
-fn data(): cret {
+fn data(): number {
 
 };

@@ -42,6 +42,7 @@ std::unique_ptr<FunctionDecl> Parser::parseFunctionDecl()
     matchOrReturn(TokenType::IDENTIFIER, "expected identifier");
     eatNextToken();
 
+    
     varOrReturn(parameterList, parseParameterList());
     eatNextToken();
 
@@ -238,9 +239,10 @@ std::unique_ptr<ParameterDecl> Parser::parseParamDecl()
     std::string identifier = *nextToken.value;
     eatNextToken();
 
+
     matchOrReturn(TokenType::COLON, "Expected ':'");
     eatNextToken();
-
+    
     varOrReturn(type, parseType());
 
     return std::make_unique<ParameterDecl>(location, std::move(identifier), std::move(*type));
@@ -255,6 +257,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> Parser::parseParame
 
     while (true)
     {
+
         if (nextToken.type == TokenType::RPAREN)
             break;
         matchOrReturn(TokenType::IDENTIFIER, "Expected parameter Declaration");
