@@ -121,6 +121,7 @@ public:
     std::unique_ptr<ResolvedParamDecl> resolveParamDecl(const ParameterDecl &param)
     {
         std::optional<Type> type = resolveType(param.type);
+    
         if (!type || type->kind == Type::Kind::Void)
         {
             return report(param.location, "parameter '" + param.identifier + "' has invalid '" + param.type.name + "' type");

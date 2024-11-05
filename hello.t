@@ -2,6 +2,6 @@ fn main(): void {
       
 };
 
-fn data(): number {
+fn data(): cret {
 
 };

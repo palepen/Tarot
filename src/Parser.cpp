@@ -59,8 +59,7 @@ std::unique_ptr<FunctionDecl> Parser::parseFunctionDecl()
 std::optional<Type> Parser::parseType()
 {
     TokenType type = nextToken.type;
-    std::cout << nextToken.to_string() << std::endl;
-    std::cout << static_cast<int>(type) << std::endl;
+
 
     switch (type)
     {

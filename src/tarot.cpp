@@ -25,19 +25,10 @@ int main(int argc, char *argv[])
     Parser parse(lex);
 
     std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> AST = parse.parseSourceFile();
-    for (auto &it : AST.first)
-    {
 
-        it->dump(0);
-    }
-
-    printf("SEMA BEGIN\n");
     Sema sema(AST.first);
-    printf("SEMA END\n");
 
-    printf("RESOLVE AST BEGIN\n");
     sema.resolveAST();
-    printf("RESOLVE AST END\n");
     for (auto &it : sema.ast)
     {
         it->dump(0);
