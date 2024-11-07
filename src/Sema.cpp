@@ -65,7 +65,7 @@ std::unique_ptr<ResolvedFunctionDecl> Sema::resolveFunctionDeclaration(const Fun
     {
         if (type->kind != Type::Kind::Void)
             return report(function.location, "main function is expected to have 'void' type");
-        if (!function.params.size())
+        if (function.params.size())
             return report(function.location, "main function is expected to have no arguments");
     }
 

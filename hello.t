@@ -1,7 +1,7 @@
-fn main(a: number): void {       
-    
+fn main(): void {       
+    asf;
 };
 
-fn data(): number {
+fn data(a: number): number {
 
 };

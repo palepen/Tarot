@@ -46,6 +46,7 @@ std::unique_ptr<FunctionDecl> Parser::parseFunctionDecl()
     varOrReturn(parameterList, parseParameterList());
     eatNextToken();
 
+
     matchOrReturn(TokenType::COLON, "Expected ':'");
     eatNextToken();
 
@@ -101,8 +102,7 @@ std::unique_ptr<Block> Parser::parseBlock()
         if (nextToken.type == TokenType::RBRACE)
             break;
         varOrReturn(stmt, parseStatement());
-        std::cout << nextToken.to_string() << std::endl;
-
+        
         if (!stmt)
         {
             synchronize();
@@ -242,9 +242,8 @@ std::unique_ptr<ParameterDecl> Parser::parseParamDecl()
 
     matchOrReturn(TokenType::COLON, "Expected ':'");
     eatNextToken();
-    
-    varOrReturn(type, parseType());
 
+    varOrReturn(type, parseType());
     return std::make_unique<ParameterDecl>(location, std::move(identifier), std::move(*type));
 }
 
@@ -257,13 +256,12 @@ std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> Parser::parseParame
 
     while (true)
     {
-
         if (nextToken.type == TokenType::RPAREN)
             break;
         matchOrReturn(TokenType::IDENTIFIER, "Expected parameter Declaration");
 
         varOrReturn(parameterDecl, parseParamDecl());
-
+        parameterlist.emplace_back(std::move(parameterDecl));
         if (nextToken.type != TokenType::COMMA)
             break;
         eatNextToken();
