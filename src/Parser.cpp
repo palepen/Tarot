@@ -102,7 +102,6 @@ std::unique_ptr<Block> Parser::parseBlock()
         if (nextToken.type == TokenType::RBRACE)
             break;
         varOrReturn(stmt, parseStatement());
-        
         if (!stmt)
         {
             synchronize();
@@ -113,13 +112,14 @@ std::unique_ptr<Block> Parser::parseBlock()
 
         statements.emplace_back(std::move(stmt));
     }
+
     matchOrReturn(TokenType::RBRACE, "Expected '}'");
     eatNextToken(); // }
 
     matchOrReturn(TokenType::SEMICOLON, "Expected ';'");
     eatNextToken(); // ;
 
-    return std::make_unique<Block>(location);
+    return std::make_unique<Block>(location, std::move(statements));
 }
 
 void Parser::synchronizeOn(TokenType type)
@@ -133,12 +133,11 @@ void Parser::synchronizeOn(TokenType type)
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
-
+    
     if (nextToken.type == TokenType::RETURN)
         return parseReturnStatement();
 
     varOrReturn(expr, parseExpression());
-
     matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of expression")
         eatNextToken();
 
@@ -151,7 +150,6 @@ std::unique_ptr<ReturnStatement> Parser::parseReturnStatement()
     eatNextToken(); // return
 
     std::unique_ptr<Expression> expr;
-
     if (nextToken.type != TokenType::SEMICOLON)
     {
         expr = parseExpression();

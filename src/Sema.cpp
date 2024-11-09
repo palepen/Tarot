@@ -33,6 +33,11 @@ std::vector<std::unique_ptr<ResolvedFunctionDecl>> Sema::resolveAST()
             insertDeclToCurrentScope(*param);
         }
 
+        // for (auto &it : ast[i - 1]->body->statements)
+        // {
+        //     it->dump(0);
+        // }
+
         auto resolvedBody = resolveBlock(*ast[i - 1]->body);
         if (!resolvedBody)
         {
@@ -109,11 +114,11 @@ std::unique_ptr<ResolvedBlock> Sema::resolveBlock(const Block &block)
     for (auto &&stmt : block.statements)
     {
         auto resolvedStatement = resolveStatement(*stmt);
+        
 
         error != !resolvedStatements.emplace_back(std::move(resolvedStatement));
         if (error)
             continue;
-
         if (reportUnreachableCount == 1)
         {
             report(stmt->location, "unreachable statement", true);
@@ -132,11 +137,11 @@ std::unique_ptr<ResolvedBlock> Sema::resolveBlock(const Block &block)
 
 std::unique_ptr<ResolvedStatement> Sema::resolveStatement(const Statement &stmt)
 {
+
     if (auto *expr = dynamic_cast<const Expression *>(&stmt))
     {
         return resolveExpression(*expr);
     }
-
     if (auto *returnStmt = dynamic_cast<const ReturnStatement *>(&stmt))
         return resolveReturnStatement(*returnStmt);
 
@@ -147,6 +152,8 @@ std::unique_ptr<ResolvedReturnStmt> Sema::resolveReturnStatement(const ReturnSta
 {
     if (currentFunction->type.kind == Type::Kind::Void && returnStmt.expr)
         return report(returnStmt.location, "Unexpected return value in void function");
+
+    currentFunction->dump(0);
 
     if (currentFunction->type.kind != Type::Kind::Void && !returnStmt.expr)
         return report(returnStmt.location, "expected a return value");
@@ -191,7 +198,7 @@ std::unique_ptr<ResolvedExpression> Sema::resolveExpression(const Expression &ex
 
     if (const auto *number = dynamic_cast<const NumberLiteral *>(&expr))
         return std::make_unique<ResolvedNumberLiteral>(number->location, std::stod(number->value));
-
+  
     if (const auto *declRefExpr = dynamic_cast<const DeclRefExpression *>(&expr))
         return resolveDeclarationRefExpr(*declRefExpr);
 
@@ -201,6 +208,10 @@ std::unique_ptr<ResolvedExpression> Sema::resolveExpression(const Expression &ex
 std::unique_ptr<ResolvedDeclarationRefExpr> Sema::resolveDeclarationRefExpr(const DeclRefExpression &declRefExpr, bool isCallee)
 {
     ResolvedDecl *decl = lookupDecl(declRefExpr.identifier).first;
+
+    if (!decl)
+       return report(declRefExpr.location, "symbol '" + declRefExpr.identifier + "' not found");
+ 
     if (!isCallee && dynamic_cast<ResolvedFunctionDecl *>(decl))
         return report(declRefExpr.location, "expected to call function '" + declRefExpr.identifier + "'");
 

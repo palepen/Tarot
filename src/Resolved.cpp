@@ -12,7 +12,6 @@ void ResolvedDeclarationRefExpr::dump(size_t level) const {
 void ResolvedCallExpr::dump(size_t level) const 
 {
     std::cerr << indent(level) << "ResolvedCallExpr: @(" << &callee << ")" << callee->identifier << "\n";
-
     for(auto &&arg : arguments){
         arg->dump(level + 1);
     } 
@@ -24,7 +23,8 @@ void ResolvedBlock::dump(size_t level) const {
 
     for(auto &&stmt : statements) 
     {
-        stmt->dump(level + 1);
+        if(stmt)
+            stmt->dump(level + 1);
     }
 }
 
@@ -41,7 +41,8 @@ void ResolvedFunctionDecl::dump(size_t level) const {
         params->dump(level + 1);
     }
 
-    body->dump(level + 1);
+    if(body)
+        body->dump(level + 1);
 }
 
 
