@@ -116,7 +116,7 @@ std::unique_ptr<ResolvedBlock> Sema::resolveBlock(const Block &block)
         auto resolvedStatement = resolveStatement(*stmt);
         
 
-        error != !resolvedStatements.emplace_back(std::move(resolvedStatement));
+        error |= !resolvedStatements.emplace_back(std::move(resolvedStatement));
         if (error)
             continue;
         if (reportUnreachableCount == 1)

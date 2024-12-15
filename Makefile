@@ -1,45 +1,45 @@
-TARGET_EXEC := trt
+TARGET_EXEC := ./trt
 
 BUILD_DIR := ./build
 SRC_DIRS := ./src
 
-# Find all the C and C++ files we want to compile
+# Find all the C, C++, and assembly files we want to compile
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 
-# Prepends BUILD_DIR and appends .o to every src file
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+# Generate object file paths by prepending the build directory and appending .o
+OBJS := $(SRCS:$(SRC_DIRS)/%=$(BUILD_DIR)/%.o)
 
-# String substitution for dependency files
+# Define dependency file paths (replace .o with .d)
 DEPS := $(OBJS:.o=.d)
 
-# Find all include directories and add the -I flag for clang++
+# Find all the directories within SRC_DIRS and prepare include flags
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-# Compilation flags: include directories, dependency generation, and C++17 standard
+# Compiler flags for Clang and Clang++ files, including dependency generation
 CPPFLAGS := $(INC_FLAGS) -MMD -MP
+
+# Use Clang as the compiler
+CXX := clang++
+CFLAGS := -std=c11
 CXXFLAGS := -std=c++17
 
-# Use llvm-config to get the necessary linking flags
+# Linker flags (using llvm-config for LLVM libraries)
 LDFLAGS := $(shell llvm-config --ldflags --libs)
 
-# Final build step: linking all object files into the executable
+# Final build step: linking object files into the final executable
 $(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 
-# Build step for C source files
-$(BUILD_DIR)/%.c.o: %.c
-	mkdir -p $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-
-# Build step for C++ source files
-$(BUILD_DIR)/%.cpp.o: %.cpp
+# Rule for compiling C++ source files
+$(BUILD_DIR)/%.cpp.o: $(SRC_DIRS)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
+# Clean build files
 .PHONY: clean
 clean:
-	rm -r $(BUILD_DIR) $(TARGET_EXEC)
+	rm -rf $(BUILD_DIR) ./trt
 
-# Include the dependency files for automatic rebuilds
+# Include the .d dependency files. The - at the front suppresses errors for missing dependencies.
 -include $(DEPS)

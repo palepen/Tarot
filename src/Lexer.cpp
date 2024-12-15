@@ -80,6 +80,9 @@ TokenType Lexer::getTokenType(const char &currentChar)
     case '\0':
         return TokenType::EOFTOK;
         break;
+    case ',':
+        return TokenType::COMMA;
+        break;
     default:
         return TokenType::UNK;
         break;

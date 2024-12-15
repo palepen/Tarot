@@ -50,6 +50,8 @@ struct Token
             return "RParen";
         case TokenType::NUMBER:
             return "number";
+        case TokenType::COMMA:
+            return "comma";
         default:
             return "single";
         }

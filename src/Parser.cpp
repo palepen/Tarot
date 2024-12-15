@@ -260,6 +260,8 @@ std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> Parser::parseParame
 
         varOrReturn(parameterDecl, parseParamDecl());
         parameterlist.emplace_back(std::move(parameterDecl));
+        
+        std::cout << nextToken.to_string() << std::endl;
         if (nextToken.type != TokenType::COMMA)
             break;
         eatNextToken();
