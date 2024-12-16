@@ -6,15 +6,26 @@
 #include "llvm/Support/Host.h"
 #include "Resolved.h"
 
-class Codegen{
+class Codegen
+{
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
     llvm::Module module;
+    llvm::Instruction *allocaInsertPoint;
     std::vector<std::unique_ptr<ResolvedFunctionDecl>> resolvedTree;
+    llvm::Value *retVal = nullptr;
+    llvm::BasicBlock *retBB = nullptr;
     
-    public:
-        Codegen(std::vector<std::unique_ptr<ResolvedFunctionDecl>> resolvedTree, std::string_view sourcePath);
-        llvm::Module *generateIR();
+public:
+    Codegen(std::vector<std::unique_ptr<ResolvedFunctionDecl>> resolvedTree, std::string_view sourcePath);
+    llvm::Module *generateIR();
+    llvm::Type *generateType(Type type);
+    llvm::AllocaInst *allocateStackVariable(llvm::Function *function, const std::string_view identifier);
+    llvm::Value generateStatement(const ResolvedStatement  &stmt);
+    void generateFunctionDecl(const ResolvedFunctionDecl &functionDecl);
+    void generateFunctionBody(const ResolvedFunctionDecl &functionDecl);
+    void generateBlock(const ResolvedBlock &block);
+
 };
 
 #endif
