@@ -1,10 +1,11 @@
 #include <iostream>
 #include <fstream>
-#include "../includes/Parser.h"
-#include "../includes/Sema.h"
+#include "libtrt/Parser.h"
+#include "libtrt/Sema.h"
 
 int main(int argc, char *argv[])
 {
+
     std::ifstream inp(argv[1]);
     if (!inp)
     {
@@ -26,11 +27,14 @@ int main(int argc, char *argv[])
 
     std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> AST = parse.parseSourceFile();
 
+
+    // std::cout << "hello\n"; 
+    // for (auto &it : AST.first)
+    // {
+    //     it->dump(0);
+    // }
     Sema sema(AST.first);
 
+
     sema.resolveAST();
-    for (auto &it : sema.ast)
-    {
-        it->dump(0);
-    }
 }

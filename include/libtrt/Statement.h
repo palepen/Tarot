@@ -19,6 +19,7 @@ struct Statement
 struct Expression : public Statement
 {
     Expression(SourceLocation location) : Statement(location) {}
+    virtual ~Expression() = default;
 };
 
 struct ReturnStatement : public Statement

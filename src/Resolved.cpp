@@ -1,4 +1,4 @@
-#include "../includes/Resolved.h"
+#include "libtrt/Resolved.h"
 
 void ResolvedNumberLiteral::dump(size_t level) const {
   std::cerr << indent(level) << "ResolvedNumberLiteral: '" << value << "'\n";

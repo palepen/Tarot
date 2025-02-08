@@ -1,4 +1,4 @@
-#include "../includes/Parser.h"
+#include "libtrt/Parser.h"
 
 std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> Parser::parseSourceFile()
 {

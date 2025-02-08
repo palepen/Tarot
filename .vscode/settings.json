@@ -110,7 +110,9 @@
         "stack": "cpp",
         "__memory": "cpp",
         "__verbose_abort": "cpp",
-        "print": "cpp"
+        "print": "cpp",
+        "format": "cpp",
+        "text_encoding": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

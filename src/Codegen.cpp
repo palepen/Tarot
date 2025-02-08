@@ -1,4 +1,4 @@
-#include "../includes/Codegen.h"
+#include "libtrt/Codegen.h"
 #include <map>
 // set the module name ot translation_unit
 //  to set the cpu architecture prefered to use setTargetTriple
@@ -111,7 +111,7 @@ void Codegen::generateBlock(const ResolvedBlock &block)
 {
     for (auto &&stmt : block.statements)
     {
-        generateStatement(*stmt);
+        // generateStatement(*stmt);
 
         if (dynamic_cast<const ResolvedReturnStmt *>(stmt.get()))
         {
@@ -123,15 +123,15 @@ void Codegen::generateBlock(const ResolvedBlock &block)
 
 llvm::Value Codegen::generateStatement(const ResolvedStatement &stmt)
 {
-    if (auto *expr = dynamic_cast<const ResolvedExpression *>(&stmt))
-    {
-        return generateExpression(*expr);
-    }
+    // if (auto *expr = dynamic_cast<const ResolvedExpression *>(&stmt))
+    // {
+    //     return generateExpression(*expr);
+    // }
 
-    if (auto *returnStmt = dynamic_cast<const ResolvedReturnStmt *>(&stmt))
-    {
-        return generateResolvedReturnStmt(*returnStmt);
-    }
+    // if (auto *returnStmt = dynamic_cast<const ResolvedReturnStmt *>(&stmt))
+    // {
+    //     return generateResolvedReturnStmt(*returnStmt);
+    // }
 
     llvm_unreachable("unknown statement");
 }    

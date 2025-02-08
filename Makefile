@@ -3,43 +3,50 @@ TARGET_EXEC := ./trt
 BUILD_DIR := ./build
 SRC_DIRS := ./src
 
-# Find all the C, C++, and assembly files we want to compile
-SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
+# Find all the C and C++ files
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 
-# Generate object file paths by prepending the build directory and appending .o
-OBJS := $(SRCS:$(SRC_DIRS)/%=$(BUILD_DIR)/%.o)
+# Prepends BUILD_DIR and appends .o to every source file
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
-# Define dependency file paths (replace .o with .d)
+# Use clang++ from LLVM
+LLVM_CONFIG := llvm-config
+CXX := clang++
+CC := clang
+
+# Include directories from LLVM
+LLVM_CXXFLAGS := $(shell llvm-config --cxxflags | sed 's/-fno-rtti//g')
+LLVM_LDFLAGS := $(shell $(LLVM_CONFIG) --ldflags)
+LLVM_LIBS := $(shell $(LLVM_CONFIG) --libs core executionengine irreader) -lpthread -ldl -lz
+
+# String substitution (suffix version without %)
 DEPS := $(OBJS:.o=.d)
 
-# Find all the directories within SRC_DIRS and prepare include flags
+# Every folder in ./src needs to be passed for header file lookup
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-# Compiler flags for Clang and Clang++ files, including dependency generation
-CPPFLAGS := $(INC_FLAGS) -MMD -MP
+# Compiler flags
+CPPFLAGS := $(INC_FLAGS) $(LLVM_CXXFLAGS) -MMD -MP -frtti
+LDFLAGS := $(LLVM_LDFLAGS) $(LLVM_LIBS)
 
-# Use Clang as the compiler
-CXX := clang++
-CFLAGS := -std=c11
-CXXFLAGS := -std=c++17
-
-# Linker flags (using llvm-config for LLVM libraries)
-LDFLAGS := $(shell llvm-config --ldflags --libs)
-
-# Final build step: linking object files into the final executable
-$(TARGET_EXEC): $(OBJS)
+# Final build step
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 
-# Rule for compiling C++ source files
-$(BUILD_DIR)/%.cpp.o: $(SRC_DIRS)/%.cpp
+# Build step for C source
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+# Build step for C++ source
+$(BUILD_DIR)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-# Clean build files
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR) ./trt
+	rm -rf $(BUILD_DIR)
 
-# Include the .d dependency files. The - at the front suppresses errors for missing dependencies.
+# Include the .d makefiles to enable automatic dependency tracking
 -include $(DEPS)

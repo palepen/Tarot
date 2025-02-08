@@ -1,4 +1,4 @@
-#include "../includes/Lexer.h"
+#include "libtrt/Lexer.h"
 
 bool isSpace(char c)
 {
