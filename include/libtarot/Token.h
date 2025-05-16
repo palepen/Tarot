@@ -1,9 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
-#include <string>
 #include <unordered_map>
 #include <optional>
-#include <string_view>
 #include <values.h>
 #include "TokenType.h"
 #include "Source.h"

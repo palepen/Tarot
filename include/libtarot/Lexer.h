@@ -1,6 +1,5 @@
 #ifndef LEXER_H
 #define LEXER_H
-#include <string>
 #include "Token.h"
 
 bool isSpace(char c);

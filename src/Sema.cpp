@@ -1,4 +1,5 @@
-#include "libtrt/Sema.h"
+#include "libtarot/Sema.h"
+#include <llvm/Support/ErrorHandling.h>
 
 std::vector<std::unique_ptr<ResolvedFunctionDecl>> Sema::resolveAST()
 {
@@ -239,7 +240,7 @@ std::unique_ptr<ResolvedCallExpr> Sema::resolveCallExpression(const CallExpressi
 
     for (auto &&arg : callExpr.arguments)
     {
-        varOrReturn(resolvedArg, resolveExpression(*arg));
+        varOrReturn(resolvedArg, resolveExpression(*arg));  
 
         if (resolvedArg->type.kind != resolvedFunctionDecl->params[idx]->type.kind)
             return report(resolvedArg->location, "unexpected type of argument");

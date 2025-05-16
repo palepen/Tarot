@@ -1,10 +1,7 @@
 #ifndef SEMA_H
 #define SEMA_H
-#include "Declaration.h"
-#include "Resolved.h"
-#include "Report.h"
 #include <optional>
-#include <llvm/Support/ErrorHandling.h>
+#include "Resolved.h"
 #include "Parser.h"
 
 class Sema

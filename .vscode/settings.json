@@ -112,7 +112,8 @@
         "__verbose_abort": "cpp",
         "print": "cpp",
         "format": "cpp",
-        "text_encoding": "cpp"
+        "text_encoding": "cpp",
+        "*.inc": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

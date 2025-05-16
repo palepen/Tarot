@@ -1,11 +1,9 @@
 
-fn data(a: number, b: number ): void {
+fn data(): number {
 
 };
 fn main(): void 
 {
-    a : number;
-    data(2, 3);
-    
+    data();
 };
 

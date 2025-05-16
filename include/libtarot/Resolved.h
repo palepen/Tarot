@@ -5,6 +5,7 @@
 #include "Source.h"
 #include "Type.h"
 #include "Indent.h"
+
 struct ResolvedStatement
 {
     SourceLocation location;
