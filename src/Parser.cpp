@@ -1,6 +1,6 @@
 #include "libtarot/Parser.h"
 
-std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> Parser::parseSourceFile()
+std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> Parser::parseSourceFile(bool isTestingWithoutMain)
 {
     bool hasMainFunction = false;
     std::vector<std::unique_ptr<FunctionDecl>> functions;
@@ -22,6 +22,10 @@ std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> Parser::parseSourceF
     for (auto &&fn : functions)
     {
         hasMainFunction |= fn->identifier == "main";
+    }
+    if (!isTestingWithoutMain)
+    {
+        hasMainFunction = true;
     }
 
     if (!hasMainFunction && !incompleteAST)
@@ -261,7 +265,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> Parser::parseParame
         varOrReturn(parameterDecl, parseParamDecl());
         parameterlist.emplace_back(std::move(parameterDecl));
         
-        std::cout << nextToken.to_string() << std::endl;
+  
         if (nextToken.type != TokenType::COMMA)
             break;
         eatNextToken();

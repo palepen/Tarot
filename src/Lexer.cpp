@@ -15,11 +15,11 @@ Token Lexer::getNextToken()
     }
 
     SourceLocation tokenStartLocation{source->path, line, column};
-    if (isalpha(currentChar))
+    if (isalpha(currentChar) || currentChar == '_')
     {
         std::string val{currentChar};
 
-        while (isalnum(peekNextChar()))
+        while (isalnum(peekNextChar()) || peekNextChar() == '_')
             val += eatNextChar();
         if (keywords.count(val)){
             return Token{tokenStartLocation, keywords.at(val), std::move(val)};
@@ -39,8 +39,9 @@ Token Lexer::getNextToken()
         value += eatNextChar();
 
         if(!isdigit(peekNextChar())) 
-            return Token{tokenStartLocation, TokenType::UNK};
+            return Token{tokenStartLocation, TokenType::UNK, value};
 
+        
         while(isdigit(peekNextChar())) value += eatNextChar();
 
         return Token{tokenStartLocation, TokenType::NUMBER, value};

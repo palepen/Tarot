@@ -16,6 +16,7 @@ public:
     {
         this->source = new SourceFile(path, buffer);
     };
+    explicit Lexer(SourceFile *source) : source(source) {};
     Token getNextToken();
 
     TokenType getTokenType(const char &currentChar);

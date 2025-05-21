@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Project definition with C++ language
-project(Tarot LANGUAGES CXX)
+project(Tarot LANGUAGES C CXX)
 
 # Set C++ standard to 17 and make it required
 set(CMAKE_CXX_STANDARD 17)
@@ -24,6 +24,7 @@ add_definitions(${LLVM_DEFINITIONS})
 # Enable testing with CTest
 include(CTest)
 
+
 # Add subdirectories for source and tools
 add_subdirectory(src)
 add_subdirectory(tools)
@@ -33,6 +34,7 @@ if(BUILD_TESTING)
     find_package(Catch2 CONFIG REQUIRED)
     if(Catch2_FOUND)
         message(STATUS "Found Catch2 for testing")
+        file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/test/example)
         add_subdirectory(test)
     else()
         message(WARNING "Catch2 not found; tests will not be built")

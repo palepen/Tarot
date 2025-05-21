@@ -32,7 +32,6 @@ struct Token
         case TokenType::RETURN:
             return "return";
         case TokenType::IDENTIFIER:
-            if(type == TokenType::EOFTOK) return "End Of File";
             return value.has_value() ? value.value() : "identifier";
         case TokenType::LBRACE:
             return "LBrace";
@@ -50,6 +49,8 @@ struct Token
             return "number";
         case TokenType::COMMA:
             return "comma";
+        case TokenType::EOFTOK:
+            return "EOF";
         default:
             return "single";
         }

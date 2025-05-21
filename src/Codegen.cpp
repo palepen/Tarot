@@ -1,7 +1,7 @@
 #include "libtarot/Codegen.h"
 #include "llvm/TargetParser/Host.h"
-
 #include <map>
+#include <iostream>
 // set the module name ot translation_unit
 //  to set the cpu architecture prefered to use setTargetTriple
 Codegen::Codegen(
@@ -13,6 +13,7 @@ Codegen::Codegen(
 {
     module.setSourceFileName(sourcePath);
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
+    allocaInsertPoint = nullptr;
 }
 
 // we need to make all the functions available to other functions so the resolution happens in 2 passes
@@ -20,13 +21,17 @@ Codegen::Codegen(
 llvm::Module *Codegen::generateIR()
 {
     for (auto &&function : resolvedTree)
+    {
         generateFunctionDecl(*function);
+    }
 
     for (auto &&function : resolvedTree)
+    {
         generateFunctionBody(*function);
+    }
 
     generateMainWrapper();
-    
+
     return &module;
 }
 
@@ -61,6 +66,7 @@ void Codegen::generateFunctionDecl(const ResolvedFunctionDecl &functionDecl)
 // In LLVM IR a set of instructions that execute together is placed inside a basic block
 void Codegen::generateFunctionBody(const ResolvedFunctionDecl &functionDecl)
 {
+
     // gets the functions name
     auto *function = module.getFunction(functionDecl.identifier);
 
@@ -77,10 +83,14 @@ void Codegen::generateFunctionBody(const ResolvedFunctionDecl &functionDecl)
     bool isVoid = functionDecl.type.kind == Type::Kind::Void;
 
     if (!isVoid)
+    {
         retVal = allocateStackVariable(function, "retval");
-
-    retBB = llvm::BasicBlock::Create(context, "return");
-
+        if (!retVal)
+        {
+            llvm_unreachable("Failed to allocate return value");
+        }
+    }
+    retBB = llvm::BasicBlock::Create(context, "return", function);
     // set the args of a function
     int idx = 0;
     for (auto &&arg : function->args())
@@ -99,14 +109,14 @@ void Codegen::generateFunctionBody(const ResolvedFunctionDecl &functionDecl)
         ++idx;
     }
 
-    if (retBB->hasNPredecessorsOrMore(1))
-    {
-        builder.CreateBr(retBB);
-        retBB->insertInto(function);
-        builder.SetInsertPoint(retBB);
-    }
-
+    // if (retBB->hasNPredecessorsOrMore(1))
+    // {
+    //     builder.CreateBr(retBB);
+    //     retBB->insertInto(function);
+    //     builder.SetInsertPoint(retBB);
+    // }
     // now the block is generated
+
     if (functionDecl.identifier == "println")
         generateBuiltinPrintBody(functionDecl);
     else
@@ -116,13 +126,40 @@ void Codegen::generateFunctionBody(const ResolvedFunctionDecl &functionDecl)
     allocaInsertPoint->eraseFromParent();
     allocaInsertPoint = nullptr;
 
-    if (isVoid)
+    llvm::BasicBlock *currentBB = builder.GetInsertBlock();
+    if (currentBB && !currentBB->getTerminator())
     {
-        builder.CreateRetVoid();
-        return;
+        if (!isVoid && retBB)
+        {
+            builder.CreateBr(retBB);
+        }
+        else
+        {
+            builder.CreateRetVoid();
+        }
     }
 
-    builder.CreateRet(builder.CreateLoad(builder.getDoubleTy(), retVal));
+    // Emit the return block even if it’s empty — insert ret void
+    if (isVoid && retBB)
+    {
+        builder.SetInsertPoint(retBB);
+        if (!retBB->getTerminator())
+        {
+            builder.CreateRetVoid();
+        }
+    }
+    else if (!isVoid && retBB && !retBB->getTerminator())
+    {
+        builder.SetInsertPoint(retBB);
+        builder.CreateRet(builder.CreateLoad(builder.getDoubleTy(), retVal));
+    }
+
+    // Cleanup
+    retVal = nullptr;
+    retBB = nullptr;
+    allocaInsertPoint = nullptr;
+    declarations.clear();
+    // builder.CreateRet(builder.CreateLoad(builder.getDoubleTy(), retVal));
 }
 
 llvm::AllocaInst *Codegen::allocateStackVariable(llvm::Function *function, const std::string_view identifier)
@@ -179,7 +216,9 @@ llvm::Value *Codegen::generateExpression(const ResolvedExpression &expr)
         return builder.CreateLoad(builder.getDoubleTy(), declarations[dre->decl]);
 
     if (auto *call = dynamic_cast<const ResolvedCallExpr *>(&expr))
+    {
         return generateCallExpr(*call);
+    }
 
     llvm_unreachable("unexpected Expression");
 }
@@ -200,11 +239,11 @@ llvm::Value *Codegen::generateCallExpr(const ResolvedCallExpr &call)
 
 void Codegen::generateBuiltinPrintBody(const ResolvedFunctionDecl &println)
 {
-    auto *type = llvm::FunctionType::get(builder.getInt32Ty(), {builder.getInt8Ty()}, true);
+    auto *type = llvm::FunctionType::get(builder.getInt32Ty(), {llvm::PointerType::get(builder.getInt8Ty(), 0)}, true);
     auto *printf = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "printf", module);
-    auto *format  = builder.CreateGlobalString("%.15g\n");
+    auto *format = builder.CreateGlobalString("%.15g\n");
 
-    llvm::Value *param = builder.CreateLoad(builder.getDoubleTy(), declarations[println.params[0].get()]);   
+    llvm::Value *param = builder.CreateLoad(builder.getDoubleTy(), declarations[println.params[0].get()]);
     builder.CreateCall(printf, {format, param});
 }
 

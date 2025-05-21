@@ -32,7 +32,7 @@ public:
         nextToken = lexer->getNextToken();
     }
 
-    std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> parseSourceFile();
+    std::pair<std::vector<std::unique_ptr<FunctionDecl>>, bool> parseSourceFile(bool isTestingWithoutMain);
     std::unique_ptr<FunctionDecl> parseFunctionDecl();
     std::optional<Type> parseType();
     std::unique_ptr<Block> parseBlock();
