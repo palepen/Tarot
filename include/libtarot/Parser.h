@@ -14,7 +14,6 @@
     if (nextToken.type != tok)  \
         report(nextToken.source, msg);
 
-
 class Parser
 {
 private:
@@ -44,9 +43,10 @@ public:
     std::unique_ptr<Expression> parseExpression();
     std::unique_ptr<ParameterDecl> parseParamDecl();
     std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> parseParameterList();
+    std::unique_ptr<Expression> parseExpressionRHS(std::unique_ptr<Expression> lhs, int precedence);
+    std::unique_ptr<Expression> parsePrefixExpression();
     void synchronizeOn(TokenType type);
     void synchronize();
-
 };
 
 #endif

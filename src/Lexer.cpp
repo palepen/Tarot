@@ -47,8 +47,10 @@ Token Lexer::getNextToken()
         return Token{tokenStartLocation, TokenType::NUMBER, value};
     }
 
-    if (currentChar == '/' && peekNextChar() == '/')
+    if (currentChar == '/')
     {
+        if (peekNextChar() != '/')
+            return Token{tokenStartLocation, TokenType::SLASH};
         while (peekNextChar() != '\n' && peekNextChar() != '\0')
             eatNextChar();
         return getNextToken();

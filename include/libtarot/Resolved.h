@@ -4,7 +4,8 @@
 #include <memory>
 #include "Source.h"
 #include "Type.h"
-#include "Indent.h"
+#include "Utils.h"
+#include "TokenType.h"
 
 struct ResolvedStatement
 {
@@ -105,5 +106,26 @@ struct ResolvedReturnStmt : public ResolvedStatement {
   void dump(size_t level = 0) const override;
 };
 
+
+struct ResolvedBinaryOperator : public ResolvedExpression
+{
+    std::unique_ptr<ResolvedExpression> lhs;
+    std::unique_ptr<ResolvedExpression> rhs;
+    TokenType op;
+
+    ResolvedBinaryOperator(SourceLocation location, std::unique_ptr<ResolvedExpression> lhs, std::unique_ptr<ResolvedExpression> rhs, TokenType op) : ResolvedExpression(location, lhs->type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+struct ResolvedUnaryOperator : public ResolvedExpression
+{
+    std::unique_ptr<ResolvedExpression> operand;
+    TokenType op;
+
+    ResolvedUnaryOperator(SourceLocation loc, std::unique_ptr<ResolvedExpression> operand, TokenType op) : ResolvedExpression(loc, operand->type), operand(std::move(operand)), op(op) {}
+
+    void dump(size_t level = 0) const override;
+};
 
 #endif

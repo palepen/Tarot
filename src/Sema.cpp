@@ -7,7 +7,6 @@ std::vector<std::unique_ptr<ResolvedFunctionDecl>> Sema::resolveAST()
     auto println = createBuiltinPrintln();
     ScopeRAII(this);
 
-
     insertDeclToCurrentScope(*resolvedTree.emplace_back(std::move(println)));
 
     bool error = false;
@@ -202,14 +201,18 @@ std::unique_ptr<ResolvedExpression> Sema::resolveExpression(const Expression &ex
     if (const auto *declRefExpr = dynamic_cast<const DeclRefExpression *>(&expr))
         return resolveDeclarationRefExpr(*declRefExpr);
 
+    if (const auto *binaryOperator = dynamic_cast<const BinaryOperator *>(&expr))
+        return resolveBinaryOperator(*binaryOperator);
+
+    if (const auto *unaryOperator = dynamic_cast<const UnaryOperator *>(&expr))
+        return resolveUnaryOperator(*unaryOperator);
+
     llvm_unreachable("unexpected Expression");
 }
 
 std::unique_ptr<ResolvedDeclarationRefExpr> Sema::resolveDeclarationRefExpr(const DeclRefExpression &declRefExpr, bool isCallee)
 {
     ResolvedDecl *decl = lookupDecl(declRefExpr.identifier).first;
-
-
 
     if (!decl)
         return report(declRefExpr.location, "symbol '" + declRefExpr.identifier + "' not found");
@@ -240,7 +243,7 @@ std::unique_ptr<ResolvedCallExpr> Sema::resolveCallExpression(const CallExpressi
 
     for (auto &&arg : callExpr.arguments)
     {
-        varOrReturn(resolvedArg, resolveExpression(*arg));  
+        varOrReturn(resolvedArg, resolveExpression(*arg));
 
         if (resolvedArg->type.kind != resolvedFunctionDecl->params[idx]->type.kind)
             return report(resolvedArg->location, "unexpected type of argument");
@@ -281,3 +284,30 @@ bool Sema::insertDeclToCurrentScope(ResolvedDecl &decl)
     scopes.back().emplace_back(&decl);
     return true;
 }
+
+std::unique_ptr<ResolvedUnaryOperator> Sema::resolveUnaryOperator(const UnaryOperator &unary)
+{
+    varOrReturn(resolvedRHS, resolveExpression(*unary.operand));
+
+    if (resolvedRHS->type.kind == Type::Kind::Void)
+    {
+        return report(resolvedRHS->location, "void expressions cannot be used as an operand to unary operator");
+    }
+
+    return std::make_unique<ResolvedUnaryOperator>(unary.location, unary.op, std::move(resolvedRHS));
+}
+
+std::unique_ptr<ResolvedBinaryOperator> Sema::resolveBinaryOperator(const BinaryOperator &binOp)
+{
+    varOrReturn(resolvedLHS, resolveExpression(*binOp.lhs));
+    varOrReturn(resolvedRHS, resolveExpression(*binOp.rhs));
+
+    if (resolvedLHS->type.kind == Type::Kind::Void)
+        return report(resolvedLHS->location, "void expression cannot be used as a LHS operand to binary operator");
+    
+    if (resolvedRHS->type.kind == Type::Kind::Void)
+        return report(resolvedRHS->location, "void expression cannot be used as a RHS operand to binary operator");
+    
+    return std::make_unique<ResolvedBinaryOperator>(binOp.location, std::move(resolvedLHS), std::move(resolvedRHS), binOp.op);
+}
+

@@ -53,3 +53,19 @@ void ResolvedReturnStmt::dump(size_t level) const {
   if (expr)
     expr->dump(level + 1);
 }
+
+void ResolvedBinaryOperator::dump(size_t level) const {
+  std::cerr << indent(level) << "ResolvedBinaryOperator: '" << getOpStr(op) << '\'' << '\n';
+
+  lhs->dump(level + 1);
+  rhs->dump(level + 1);
+}
+
+void ResolvedUnaryOperator::dump(size_t level) const {
+  std::cerr << indent(level) << "ResolvedUnaryOperator: '" << getOpStr(op) << '\'' << '\n';
+
+  if (auto val = getConstantValue())
+    std::cerr << indent(level) << "| value: " << *val << '\n';
+
+  operand->dump(level + 1);
+}

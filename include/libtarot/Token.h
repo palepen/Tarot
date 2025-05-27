@@ -49,6 +49,14 @@ struct Token
             return "number";
         case TokenType::COMMA:
             return "comma";
+        case TokenType::SLASH:
+            return "slash";
+        case TokenType::ASTERISK:
+            return "asterisk";
+        case TokenType::MINUS:
+            return "minus";
+        case TokenType::PLUS:
+            return "plus";
         case TokenType::EOFTOK:
             return "EOF";
         default:
@@ -56,5 +64,6 @@ struct Token
         }
     }
 };
+
 
 #endif

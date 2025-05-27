@@ -44,6 +44,9 @@
 
 <expr>
     ::= <disjunction>
+
+<expr>
+    ::= <additiveExpression>
     
 <disjunction>
     ::= <conjunction> ('||' <conjunction>)*

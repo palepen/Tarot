@@ -231,7 +231,8 @@ std::unique_ptr<std::vector<std::unique_ptr<Expression>>> Parser::parseArgumentL
 
 std::unique_ptr<Expression> Parser::parseExpression()
 {
-    return parsePostFixExpression();
+    varOrReturn(lhs, parsePrefixExpression());
+    return parseExpressionRHS(std::move(lhs), 0);
 }
 
 std::unique_ptr<ParameterDecl> Parser::parseParamDecl()
@@ -310,3 +311,67 @@ void Parser::synchronize()
         eatNextToken();
     }
 }
+
+static int getTokenPrecedence(TokenType tok)
+{
+    switch (tok)
+    {
+    case TokenType::ASTERISK:
+    case TokenType::SLASH:
+        return 6;
+    case TokenType::PLUS:
+    case TokenType::MINUS:
+        return 5;
+    
+    default:
+        return -1;
+    }
+}
+
+
+bool checkRightAssoc(Token op)
+{
+    return true;
+}
+std::unique_ptr<Expression> Parser::parseExpressionRHS(std::unique_ptr<Expression> lhs, int precedence)
+{
+    while (true)    
+    {
+        Token op = nextToken;
+        int curOpPrec = getTokenPrecedence(op.type);
+
+        if (curOpPrec < precedence)
+            return lhs;
+        
+        eatNextToken();
+
+        varOrReturn(rhs, parsePrefixExpression());
+
+        if (curOpPrec < getTokenPrecedence(nextToken.type))
+        {
+            rhs = parseExpressionRHS(std::move(rhs), curOpPrec + 1);
+            if (!rhs)
+                return nullptr;
+
+        }
+
+        
+        lhs = std::make_unique<BinaryOperator>(op.source, std::move(lhs), std::move(rhs), op.type);
+        
+    }
+    
+}
+
+std::unique_ptr<Expression> Parser::parsePrefixExpression()
+{
+    Token tok = nextToken;
+    if (tok.type != TokenType::MINUS)
+        return parsePostFixExpression();
+    
+    eatNextToken();
+    
+    varOrReturn(rhs, parsePrefixExpression());
+
+    return std::make_unique<UnaryOperator>(tok.source, std::move(rhs), tok.type);
+}
+

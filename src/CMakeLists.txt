@@ -1,12 +1,13 @@
 set(
     SRC_FILES 
     Codegen.cpp
-    Indent.cpp
+    Utils.cpp
     Lexer.cpp
     Parser.cpp
     Report.cpp
     Resolved.cpp
     Sema.cpp
+    Statement.cpp
 )
 
 add_library(libtarot ${SRC_FILES})

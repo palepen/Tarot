@@ -40,6 +40,9 @@ public:
     std::unique_ptr<ResolvedDeclarationRefExpr> resolveDeclarationRefExpr(const DeclRefExpression &declRefExpr, bool isCallee = false);
     std::unique_ptr<ResolvedCallExpr> resolveCallExpression(const CallExpression &callExpr);
     std::unique_ptr<ResolvedFunctionDecl> createBuiltinPrintln();
+    std::unique_ptr<ResolvedUnaryOperator> resolveUnaryOperator(const UnaryOperator &unary);
+    std::unique_ptr<ResolvedBinaryOperator> resolveBinaryOperator(const BinaryOperator &binary);
+
     bool insertDeclToCurrentScope(ResolvedDecl &decl);
 };
 
