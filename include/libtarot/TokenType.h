@@ -1,8 +1,8 @@
 #ifndef TOKENTYPE_H
 #define TOKENTYPE_H
 constexpr char singleCharTokens[] = {
-    '\0', '(', ')', '{', '}', ':', ';', ',', '+', '-', '*'};
-
+    '\0', '(', ')', '{', '}', ':', ';', ',', '+', '-', '*', '<', '>', '!'};
+  
 enum class TokenType : char
 {
     IDENTIFIER = 1,
@@ -11,6 +11,10 @@ enum class TokenType : char
     RETURN,
     NUMBER,
     SLASH,
+    EQUALEQUAL,
+    AMPAMP,
+    PIPEPIPE,
+
     EOFTOK = singleCharTokens[0],
     LPAREN = singleCharTokens[1],
     RPAREN = singleCharTokens[2],
@@ -22,6 +26,9 @@ enum class TokenType : char
     PLUS = singleCharTokens[8],
     MINUS = singleCharTokens[9],
     ASTERISK = singleCharTokens[10],
+    LT = singleCharTokens[11],
+    GT = singleCharTokens[12],
+    EXCL = singleCharTokens[13],
     UNK = -128,
 };
 #endif

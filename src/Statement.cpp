@@ -51,3 +51,10 @@ void UnaryOperator::dump(size_t level) const
 
     operand->dump(level + 1);
 }
+
+void GroupingExpression::dump(size_t level) const 
+{
+    std::cerr << indent(level) << "Grouping Expression";
+
+    expr->dump(level + 1);
+}

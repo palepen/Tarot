@@ -207,6 +207,9 @@ std::unique_ptr<ResolvedExpression> Sema::resolveExpression(const Expression &ex
     if (const auto *unaryOperator = dynamic_cast<const UnaryOperator *>(&expr))
         return resolveUnaryOperator(*unaryOperator);
 
+    if (const auto *groupingExpr = dynamic_cast<const GroupingExpression *>(&expr))
+        return resolveGroupingExpression(*groupingExpr);
+
     llvm_unreachable("unexpected Expression");
 }
 
@@ -309,5 +312,11 @@ std::unique_ptr<ResolvedBinaryOperator> Sema::resolveBinaryOperator(const Binary
         return report(resolvedRHS->location, "void expression cannot be used as a RHS operand to binary operator");
     
     return std::make_unique<ResolvedBinaryOperator>(binOp.location, std::move(resolvedLHS), std::move(resolvedRHS), binOp.op);
+}
+
+std::unique_ptr<ResolvedGroupingExpression> Sema::resolveGroupingExpression(const GroupingExpression &grouping)
+{
+    varOrReturn(resolvedExpr, resolveExpression(*grouping.expr));    
+    return std::make_unique<ResolvedGroupingExpression>(grouping.location, std::move(resolvedExpr));
 }
 

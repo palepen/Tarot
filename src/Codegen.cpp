@@ -216,9 +216,16 @@ llvm::Value *Codegen::generateExpression(const ResolvedExpression &expr)
         return builder.CreateLoad(builder.getDoubleTy(), declarations[dre->decl]);
 
     if (auto *call = dynamic_cast<const ResolvedCallExpr *>(&expr))
-    {
         return generateCallExpr(*call);
-    }
+
+    if (auto *binOp = dynamic_cast<const ResolvedBinaryOperator *>(&expr))
+        return generateBinaryOperator(*binOp);
+
+    if (auto *unary = dynamic_cast<const ResolvedUnaryOperator *>(&expr))
+        return generateUnaryOperator(*unary);
+
+    if (auto *grouping = dynamic_cast<const ResolvedGroupingExpression *>(&expr))
+        return generateExpression(*grouping->expr);
 
     llvm_unreachable("unexpected Expression");
 }
@@ -259,4 +266,127 @@ void Codegen::generateMainWrapper()
 
     builder.CreateCall(builtinMain);
     builder.CreateRet(llvm::ConstantInt::getSigned(builder.getInt32Ty(), 0));
+}
+
+llvm::Value *Codegen::generateUnaryOperator(const ResolvedUnaryOperator &unary)
+{
+    llvm::Value *rhs = generateExpression(*unary.operand);
+
+    if (unary.op == TokenType::MINUS)
+        return builder.CreateFNeg(rhs);
+
+    if (unary.op == TokenType::EXCL)
+        return boolToDouble(builder.CreateNot(doubleToBool(rhs)));
+
+    llvm_unreachable("unknown unary operator");
+    return nullptr;
+}
+
+llvm::Value *Codegen::generateBinaryOperator(const ResolvedBinaryOperator &binOp)
+{
+    TokenType op = binOp.op;
+
+    if (op == TokenType::AMPAMP || op == TokenType::PIPEPIPE)
+    {
+        llvm::Function *function = getCurrentFunction();
+        bool isOr = op == TokenType::PIPEPIPE;
+
+        auto *rhsTag = isOr ? "or.rhs" : "and.rhs";
+        auto *mergeTag = isOr ? "or.merge" : "and.merge";
+
+        auto *rhsBB = llvm::BasicBlock::Create(context, rhsTag, function);
+        auto *mergeBB = llvm::BasicBlock::Create(context, mergeTag, function);
+
+        llvm::BasicBlock *trueBB = isOr ? mergeBB : rhsBB;
+        llvm::BasicBlock *falseBB = isOr ? rhsBB : mergeBB;
+
+        generateConditionalOperator(*binOp.lhs, trueBB, falseBB);
+
+        builder.SetInsertPoint(rhsBB);
+        llvm::Value *rhs = doubleToBool(generateExpression(*binOp.rhs));
+        builder.CreateBr(mergeBB);
+
+        rhsBB = builder.GetInsertBlock();
+        builder.SetInsertPoint(mergeBB);
+        llvm::PHINode *phi = builder.CreatePHI(builder.getInt1Ty(), 2);
+        
+        for (auto it = pred_begin(mergeBB); it != pred_end(mergeBB); ++it)
+        {
+            if (*it == rhsBB)
+                phi->addIncoming(rhs, rhsBB);
+            else
+                phi->addIncoming(builder.getInt1(isOr), *it);
+        }
+
+        return boolToDouble(phi);
+    }
+
+    llvm::Value *lhs = generateExpression(*binOp.lhs);
+    llvm::Value *rhs = generateExpression(*binOp.rhs);
+
+    switch (op)
+    {
+    case TokenType::PLUS:
+        return builder.CreateFAdd(lhs, rhs);
+    case TokenType::MINUS:
+        return builder.CreateFSub(lhs, rhs);
+    case TokenType::ASTERISK:
+        return builder.CreateFMul(lhs, rhs);
+    case TokenType::SLASH:
+        return builder.CreateFDiv(lhs, rhs);
+    case TokenType::LT:
+        return boolToDouble(builder.CreateFCmpOLT(lhs, rhs));
+    case TokenType::GT:
+        return boolToDouble(builder.CreateFCmpOGT(lhs, rhs));
+    case TokenType::EQUALEQUAL:
+        return boolToDouble(builder.CreateFCmpOEQ(lhs, rhs));
+    default:
+        break;
+    }
+
+    llvm_unreachable("unexpected binary operator");
+    return nullptr;
+}
+
+llvm::Value *Codegen::doubleToBool(llvm::Value *v)
+{
+    return builder.CreateFCmpONE(v, llvm::ConstantFP::get(builder.getDoubleTy(), 0.0), "to.bool");
+}
+
+llvm::Value *Codegen::boolToDouble(llvm::Value *v)
+{
+    return builder.CreateUIToFP(v, builder.getDoubleTy(), "to.double");
+}
+
+llvm::Function *Codegen::getCurrentFunction()
+{
+    return builder.GetInsertBlock()->getParent();
+}
+
+void Codegen::generateConditionalOperator(const ResolvedExpression &op, llvm::BasicBlock *trueBB, llvm::BasicBlock *falseBB)
+{
+    llvm::Function *function = getCurrentFunction();
+    const auto *binop = dynamic_cast<const ResolvedBinaryOperator *>(&op);
+
+    if (binop && binop->op == TokenType::PIPEPIPE)
+    {
+        llvm::BasicBlock *nextBB = llvm::BasicBlock::Create(context, "or.lhs.false", function);
+        generateConditionalOperator(*binop->lhs, trueBB, nextBB);
+        builder.SetInsertPoint(nextBB);
+        generateConditionalOperator(*binop->rhs, trueBB, falseBB);
+
+        return;
+    }
+
+    if (binop && binop->op == TokenType::AMPAMP)
+    {
+        llvm::BasicBlock *nextBB = llvm::BasicBlock::Create(context, "and.lhs.true", function);
+        generateConditionalOperator(*binop->lhs, nextBB, falseBB);
+        builder.SetInsertPoint(nextBB);
+        generateConditionalOperator(*binop->rhs, trueBB, falseBB);
+        return;
+    }
+
+    llvm::Value *val = doubleToBool(generateExpression(op));
+    builder.CreateCondBr(val, trueBB, falseBB);
 }

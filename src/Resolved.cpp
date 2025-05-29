@@ -69,3 +69,9 @@ void ResolvedUnaryOperator::dump(size_t level) const {
 
   operand->dump(level + 1);
 }
+
+void ResolvedGroupingExpression::dump(size_t level) const 
+{
+  std::cerr << indent(level) << "ResolvedGroupingExpr:\n";
+  expr->dump(level + 1);
+}

@@ -46,10 +46,8 @@ std::unique_ptr<FunctionDecl> Parser::parseFunctionDecl()
     matchOrReturn(TokenType::IDENTIFIER, "expected identifier");
     eatNextToken();
 
-    
     varOrReturn(parameterList, parseParameterList());
     eatNextToken();
-
 
     matchOrReturn(TokenType::COLON, "Expected ':'");
     eatNextToken();
@@ -65,7 +63,6 @@ std::unique_ptr<FunctionDecl> Parser::parseFunctionDecl()
 std::optional<Type> Parser::parseType()
 {
     TokenType type = nextToken.type;
-
 
     switch (type)
     {
@@ -137,7 +134,7 @@ void Parser::synchronizeOn(TokenType type)
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
-    
+
     if (nextToken.type == TokenType::RETURN)
         return parseReturnStatement();
 
@@ -172,18 +169,32 @@ std::unique_ptr<ReturnStatement> Parser::parseReturnStatement()
 std::unique_ptr<Expression> Parser::parsePrimary()
 {
     SourceLocation location = nextToken.source;
-    if (nextToken.type == TokenType::NUMBER)
+    TokenType tp = nextToken.type;
+
+    if (tp == TokenType::NUMBER)
     {
         auto literal = std::make_unique<NumberLiteral>(location, *nextToken.value);
         eatNextToken();
         return literal;
     }
 
-    if (nextToken.type == TokenType::IDENTIFIER)
+    if (tp == TokenType::IDENTIFIER)
     {
         auto declRefExpr = std::make_unique<DeclRefExpression>(location, *nextToken.value);
         eatNextToken();
         return declRefExpr;
+    }
+
+    if (tp == TokenType::LPAREN)
+    {
+        eatNextToken();
+
+        varOrReturn(expr, parseExpression());
+
+        matchOrReturn(TokenType::RPAREN, "expected ')'");
+        eatNextToken();
+
+        return std::make_unique<GroupingExpression>(location, std::move(expr));
     }
 
     return report(location, "Expected Expression");
@@ -242,7 +253,6 @@ std::unique_ptr<ParameterDecl> Parser::parseParamDecl()
     std::string identifier = *nextToken.value;
     eatNextToken();
 
-
     matchOrReturn(TokenType::COLON, "Expected ':'");
     eatNextToken();
 
@@ -265,8 +275,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ParameterDecl>>> Parser::parseParame
 
         varOrReturn(parameterDecl, parseParamDecl());
         parameterlist.emplace_back(std::move(parameterDecl));
-        
-  
+
         if (nextToken.type != TokenType::COMMA)
             break;
         eatNextToken();
@@ -322,12 +331,19 @@ static int getTokenPrecedence(TokenType tok)
     case TokenType::PLUS:
     case TokenType::MINUS:
         return 5;
-    
+    case TokenType::LT:
+    case TokenType::GT:
+        return 4;
+    case TokenType::EQUALEQUAL:
+        return 3;
+    case TokenType::AMPAMP:
+        return 2;
+    case TokenType::PIPEPIPE:
+        return 1;
     default:
         return -1;
     }
 }
-
 
 bool checkRightAssoc(Token op)
 {
@@ -335,14 +351,14 @@ bool checkRightAssoc(Token op)
 }
 std::unique_ptr<Expression> Parser::parseExpressionRHS(std::unique_ptr<Expression> lhs, int precedence)
 {
-    while (true)    
+    while (true)
     {
         Token op = nextToken;
         int curOpPrec = getTokenPrecedence(op.type);
 
         if (curOpPrec < precedence)
             return lhs;
-        
+
         eatNextToken();
 
         varOrReturn(rhs, parsePrefixExpression());
@@ -352,26 +368,21 @@ std::unique_ptr<Expression> Parser::parseExpressionRHS(std::unique_ptr<Expressio
             rhs = parseExpressionRHS(std::move(rhs), curOpPrec + 1);
             if (!rhs)
                 return nullptr;
-
         }
 
-        
         lhs = std::make_unique<BinaryOperator>(op.source, std::move(lhs), std::move(rhs), op.type);
-        
     }
-    
 }
 
 std::unique_ptr<Expression> Parser::parsePrefixExpression()
 {
     Token tok = nextToken;
-    if (tok.type != TokenType::MINUS)
+    if (tok.type != TokenType::MINUS && tok.type != TokenType::EXCL)
         return parsePostFixExpression();
-    
+
     eatNextToken();
-    
+
     varOrReturn(rhs, parsePrefixExpression());
 
     return std::make_unique<UnaryOperator>(tok.source, std::move(rhs), tok.type);
 }
-

@@ -21,28 +21,31 @@ Token Lexer::getNextToken()
 
         while (isalnum(peekNextChar()) || peekNextChar() == '_')
             val += eatNextChar();
-        if (keywords.count(val)){
+        if (keywords.count(val))
+        {
             return Token{tokenStartLocation, keywords.at(val), std::move(val)};
         }
         return Token{tokenStartLocation, TokenType::IDENTIFIER, std::move(val)};
     }
-    
-    if(isdigit(currentChar)){
+
+    if (isdigit(currentChar))
+    {
         std::string value{currentChar};
-        while(isdigit(peekNextChar()))
+        while (isdigit(peekNextChar()))
             value += eatNextChar();
-        
-        if(peekNextChar() != '.'){
+
+        if (peekNextChar() != '.')
+        {
             return Token{tokenStartLocation, TokenType::NUMBER, value};
-        }    
+        }
 
         value += eatNextChar();
 
-        if(!isdigit(peekNextChar())) 
+        if (!isdigit(peekNextChar()))
             return Token{tokenStartLocation, TokenType::UNK, value};
 
-        
-        while(isdigit(peekNextChar())) value += eatNextChar();
+        while (isdigit(peekNextChar()))
+            value += eatNextChar();
 
         return Token{tokenStartLocation, TokenType::NUMBER, value};
     }
@@ -56,6 +59,24 @@ Token Lexer::getNextToken()
         return getNextToken();
     }
 
+    if (currentChar == '=' && peekNextChar() == '=')
+    {
+        eatNextChar();
+        return Token{tokenStartLocation, TokenType::EQUALEQUAL};
+    }
+
+    if (currentChar == '&' && peekNextChar() == '&')
+    {
+        eatNextChar();
+        return Token{tokenStartLocation, TokenType::AMPAMP};
+    }
+
+    if (currentChar == '|' && peekNextChar() == '|')
+    {
+        eatNextChar();
+        return Token{tokenStartLocation, TokenType::PIPEPIPE};
+    }
+
     return Token{tokenStartLocation, getTokenType(currentChar)};
 }
 
@@ -65,31 +86,28 @@ TokenType Lexer::getTokenType(const char &currentChar)
     {
     case '(':
         return TokenType::LPAREN;
-        break;
     case ')':
         return TokenType::RPAREN;
-        break;
     case '{':
         return TokenType::LBRACE;
-        break;
     case '}':
         return TokenType::RBRACE;
-        break;
     case ':':
         return TokenType::COLON;
-        break;
     case ';':
         return TokenType::SEMICOLON;
-        break;
     case '\0':
         return TokenType::EOFTOK;
-        break;
     case ',':
         return TokenType::COMMA;
-        break;
+    case '>':
+        return TokenType::GT;
+    case '<':
+        return TokenType::LT;
+    case '!':
+        return TokenType::EXCL;
     default:
         return TokenType::UNK;
-        break;
     }
 }
 

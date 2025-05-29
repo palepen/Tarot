@@ -15,24 +15,23 @@ struct ResolvedStatement
     virtual ~ResolvedStatement() = default;
 
     virtual void dump(size_t dump = 0) const = 0;
-
 };
 
-struct ResolvedExpression : public ResolvedStatement 
+struct ResolvedExpression : public ResolvedStatement
 {
     Type type;
 
-    ResolvedExpression(SourceLocation location, Type type) 
-    : ResolvedStatement(location), type(type) {}
+    ResolvedExpression(SourceLocation location, Type type)
+        : ResolvedStatement(location), type(type) {}
 };
 
 struct ResolvedDecl
 {
     SourceLocation location;
-    std::string  identifier;
+    std::string identifier;
     Type type;
 
-    ResolvedDecl(SourceLocation location, std::string identifier, Type type): location(location), identifier(identifier), type(type) {}
+    ResolvedDecl(SourceLocation location, std::string identifier, Type type) : location(location), identifier(identifier), type(type) {}
 
     virtual ~ResolvedDecl() = default;
 
@@ -46,7 +45,6 @@ struct ResolvedBlock
     ResolvedBlock(SourceLocation location, std::vector<std::unique_ptr<ResolvedStatement>> statements) : location(location), statements(std::move(statements)) {}
 
     void dump(size_t level = 0) const;
-
 };
 
 struct ResolvedParamDecl : public ResolvedDecl
@@ -59,20 +57,19 @@ struct ResolvedParamDecl : public ResolvedDecl
 struct ResolvedNumberLiteral : public ResolvedExpression
 {
     double value;
-    ResolvedNumberLiteral(SourceLocation location, double value) : ResolvedExpression(location, Type::builtInNumber()), value(value) {}  
+    ResolvedNumberLiteral(SourceLocation location, double value) : ResolvedExpression(location, Type::builtInNumber()), value(value) {}
     void dump(size_t level = 0) const override;
 };
 
-struct ResolvedFunctionDecl : ResolvedDecl 
-{   
+struct ResolvedFunctionDecl : ResolvedDecl
+{
     std::vector<std::unique_ptr<ResolvedParamDecl>> params;
     std::unique_ptr<ResolvedBlock> body;
 
-    ResolvedFunctionDecl(SourceLocation location, std::string identifier, Type type, std::vector<std::unique_ptr<ResolvedParamDecl>> params, std::unique_ptr<ResolvedBlock> body) : ResolvedDecl(location, identifier, type) , params(std::move(params)), body(std::move(body)) {}
+    ResolvedFunctionDecl(SourceLocation location, std::string identifier, Type type, std::vector<std::unique_ptr<ResolvedParamDecl>> params, std::unique_ptr<ResolvedBlock> body) : ResolvedDecl(location, identifier, type), params(std::move(params)), body(std::move(body)) {}
 
     void dump(size_t level = 0) const override;
 };
-
 
 struct ResolvedDeclarationRefExpr : public ResolvedExpression
 {
@@ -82,30 +79,27 @@ struct ResolvedDeclarationRefExpr : public ResolvedExpression
     void dump(size_t level = 0) const override;
 };
 
-
-struct ResolvedCallExpr : public ResolvedExpression 
+struct ResolvedCallExpr : public ResolvedExpression
 {
     const ResolvedFunctionDecl *callee;
     std::vector<std::unique_ptr<ResolvedExpression>> arguments;
 
-    ResolvedCallExpr(SourceLocation location, const ResolvedFunctionDecl &callee, std::vector<std::unique_ptr<ResolvedExpression>> arguments) : ResolvedExpression(location, callee.type), callee(&callee), arguments(std::move(arguments)) {} 
+    ResolvedCallExpr(SourceLocation location, const ResolvedFunctionDecl &callee, std::vector<std::unique_ptr<ResolvedExpression>> arguments) : ResolvedExpression(location, callee.type), callee(&callee), arguments(std::move(arguments)) {}
 
     void dump(size_t level = 0) const override;
 };
 
+struct ResolvedReturnStmt : public ResolvedStatement
+{
+    std::unique_ptr<ResolvedExpression> expr;
 
+    ResolvedReturnStmt(SourceLocation location,
+                       std::unique_ptr<ResolvedExpression> expr = nullptr)
+        : ResolvedStatement(location),
+          expr(std::move(expr)) {}
 
-struct ResolvedReturnStmt : public ResolvedStatement {
-  std::unique_ptr<ResolvedExpression> expr;
-
-  ResolvedReturnStmt(SourceLocation location,
-                     std::unique_ptr<ResolvedExpression> expr = nullptr)
-      : ResolvedStatement(location),
-        expr(std::move(expr)) {}
-
-  void dump(size_t level = 0) const override;
+    void dump(size_t level = 0) const override;
 };
-
 
 struct ResolvedBinaryOperator : public ResolvedExpression
 {
@@ -128,4 +122,12 @@ struct ResolvedUnaryOperator : public ResolvedExpression
     void dump(size_t level = 0) const override;
 };
 
+struct ResolvedGroupingExpression : public ResolvedExpression
+{
+    std::unique_ptr<ResolvedExpression> expr;
+
+    ResolvedGroupingExpression(SourceLocation loc, std::unique_ptr<ResolvedExpression> expr) : ResolvedExpression(loc, expr->type), expr(std::move(expr)) {}
+
+    void dump(size_t level = 0) const override;
+};
 #endif

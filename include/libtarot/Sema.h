@@ -42,6 +42,8 @@ public:
     std::unique_ptr<ResolvedFunctionDecl> createBuiltinPrintln();
     std::unique_ptr<ResolvedUnaryOperator> resolveUnaryOperator(const UnaryOperator &unary);
     std::unique_ptr<ResolvedBinaryOperator> resolveBinaryOperator(const BinaryOperator &binary);
+    std::unique_ptr<ResolvedGroupingExpression> resolveGroupingExpression(const GroupingExpression &grouping);
+
 
     bool insertDeclToCurrentScope(ResolvedDecl &decl);
 };

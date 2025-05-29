@@ -77,4 +77,13 @@ struct UnaryOperator : public Expression
     void dump(size_t level = 0) const override;
 };
 
+struct GroupingExpression : public Expression
+{
+    std::unique_ptr<Expression> expr;
+    
+    GroupingExpression(SourceLocation location, std::unique_ptr<Expression> expr)
+    : Expression(location) , expr(std::move(expr)) {}
+
+    void dump(size_t level = 0) const override;
+};
 #endif
