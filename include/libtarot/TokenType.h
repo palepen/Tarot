@@ -11,6 +11,7 @@ enum class TokenType : char
     RETURN,
     IF,
     ELSE,
+    WHILE,
     NUMBER,
     SLASH,
     EQUALEQUAL,

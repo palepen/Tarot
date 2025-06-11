@@ -2,6 +2,7 @@
 #define STATEMENT_H
 #include "Source.h"
 #include "TokenType.h"
+#include "Declaration.h"
 #include <memory>
 #include <vector>
 
@@ -100,4 +101,5 @@ struct IfStatement : public Statement
 
     void dump(size_t level = 0) const override;
 };
+
 #endif
