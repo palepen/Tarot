@@ -144,6 +144,8 @@ std::unique_ptr<ResolvedStatement> Sema::resolveStatement(const Statement &stmt)
         return resolveReturnStatement(*returnStmt);
     }
 
+    if (auto *ifStmt = dynamic_cast<const IfStatement *>(&stmt))
+        return resolveIfStatement(*ifStmt);
     llvm_unreachable("unexpected Statement");
 }
 
@@ -164,6 +166,7 @@ std::unique_ptr<ResolvedReturnStmt> Sema::resolveReturnStatement(const ReturnSta
 
         if (currentFunction->type.kind != resolvedExpr->type.kind)
             return report(resolvedExpr->location, "unexpected return type");
+        resolvedExpr->setConstantValue(cee.evaluate(*resolvedExpr, false));
     }
 
     return std::make_unique<ResolvedReturnStmt>(returnStmt.location, std::move(resolvedExpr));
@@ -234,7 +237,6 @@ std::unique_ptr<ResolvedCallExpr> Sema::resolveCallExpression(const CallExpressi
         return report(callExpr.location, "expression cannot be called as a function");
     }
 
-    // Might Give Error check originally (*callExpr->identifier, true) => changed to (*dre, true)
     varOrReturn(resolvedCallee, resolveDeclarationRefExpr(*dre, true));
 
     const auto *resolvedFunctionDecl = dynamic_cast<const ResolvedFunctionDecl *>(resolvedCallee->decl);
@@ -250,6 +252,7 @@ std::unique_ptr<ResolvedCallExpr> Sema::resolveCallExpression(const CallExpressi
 
         if (resolvedArg->type.kind != resolvedFunctionDecl->params[idx]->type.kind)
             return report(resolvedArg->location, "unexpected type of argument");
+        resolvedArg->setConstantValue(cee.evaluate(*resolvedArg, false));
         idx++;
         resolvedArguments.emplace_back(std::move(resolvedArg));
     }
@@ -297,7 +300,7 @@ std::unique_ptr<ResolvedUnaryOperator> Sema::resolveUnaryOperator(const UnaryOpe
         return report(resolvedRHS->location, "void expressions cannot be used as an operand to unary operator");
     }
 
-    return std::make_unique<ResolvedUnaryOperator>(unary.location, unary.op, std::move(resolvedRHS));
+    return std::make_unique<ResolvedUnaryOperator>(unary.location, std::move(resolvedRHS), unary.op);
 }
 
 std::unique_ptr<ResolvedBinaryOperator> Sema::resolveBinaryOperator(const BinaryOperator &binOp)
@@ -320,3 +323,25 @@ std::unique_ptr<ResolvedGroupingExpression> Sema::resolveGroupingExpression(cons
     return std::make_unique<ResolvedGroupingExpression>(grouping.location, std::move(resolvedExpr));
 }
 
+
+std::unique_ptr<ResolvedIfStatement> Sema::resolveIfStatement(const IfStatement &ifStmt)
+{
+    varOrReturn(condition, resolveExpression(*ifStmt.condition));
+
+    if (condition->type.kind != Type::Kind::Number)
+        return report(condition->location, "expected number in condtion");
+    
+    varOrReturn(resolvedTrueBlock, resolveBlock(*ifStmt.trueBlock));
+
+    std::unique_ptr<ResolvedBlock> resolvedFalseBlock;
+    if (ifStmt.falseBlock)
+    {
+        resolvedFalseBlock = resolveBlock(*ifStmt.falseBlock);
+        if(!resolvedFalseBlock)
+            return nullptr;
+    }
+
+    condition->setConstantValue(cee.evaluate(*condition, false));
+
+    return std::make_unique<ResolvedIfStatement> (ifStmt.location, std::move(condition), std::move(resolvedTrueBlock), std::move(resolvedFalseBlock));
+}

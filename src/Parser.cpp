@@ -134,6 +134,8 @@ void Parser::synchronizeOn(TokenType type)
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
+    if(nextToken.type == TokenType::IF)
+        return parseIfStatement();
 
     if (nextToken.type == TokenType::RETURN)
         return parseReturnStatement();
@@ -385,4 +387,48 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression()
     varOrReturn(rhs, parsePrefixExpression());
 
     return std::make_unique<UnaryOperator>(tok.source, std::move(rhs), tok.type);
+}
+
+std::unique_ptr<IfStatement> Parser::parseIfStatement()
+{
+    SourceLocation loc = nextToken.source;
+    eatNextToken();  // 'if'
+
+    varOrReturn(condtion, parseExpression());
+
+    matchOrReturn(TokenType::LBRACE, "expected 'if' body");
+
+    varOrReturn(trueBlock, parseBlock());
+
+    if (nextToken.type != TokenType::ELSE)
+    {
+        return std::make_unique<IfStatement>(loc, std::move(condtion), std::move(trueBlock));
+    }
+
+    eatNextToken(); // else
+
+    std::unique_ptr<Block> falseBlock;
+
+    if (nextToken.type == TokenType::IF)
+    {   
+        varOrReturn(elseIf, parseIfStatement());
+
+        SourceLocation loc = elseIf->location;
+        std::vector<std::unique_ptr<Statement>> stmts;
+
+        stmts.emplace_back(std::move(elseIf));
+
+        falseBlock = std::make_unique<Block>(loc, stmts);
+    }
+    else
+    {
+        matchOrReturn(TokenType::LBRACE, "expected 'else' body");
+
+        falseBlock = parseBlock();
+    }
+
+    if (!falseBlock)
+        return nullptr;
+    
+    return std::make_unique<IfStatement>(loc, std::move(condtion), std::move(trueBlock), std::move(falseBlock));
 }

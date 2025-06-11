@@ -12,6 +12,8 @@ const std::unordered_map<std::string_view, TokenType>
         {"void", TokenType::VOID},
         {"return", TokenType::RETURN},
         {"number", TokenType::NUMBER},
+        {"if", TokenType::IF},
+        {"else", TokenType::ELSE}
     };
 
 

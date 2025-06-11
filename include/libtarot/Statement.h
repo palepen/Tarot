@@ -80,9 +80,23 @@ struct UnaryOperator : public Expression
 struct GroupingExpression : public Expression
 {
     std::unique_ptr<Expression> expr;
-    
+
     GroupingExpression(SourceLocation location, std::unique_ptr<Expression> expr)
-    : Expression(location) , expr(std::move(expr)) {}
+        : Expression(location), expr(std::move(expr)) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+
+struct IfStatement : public Statement
+{
+    std::unique_ptr<Expression> condition;
+    std::unique_ptr<Block> trueBlock;
+    std::unique_ptr<Block> falseBlock;
+
+    IfStatement(SourceLocation loc, std::unique_ptr<Expression> condition,
+               std::unique_ptr<Block> trueBlock,
+               std::unique_ptr<Block> falseBlock = nullptr) : Statement(loc), condition(std::move(condition)), trueBlock(std::move(trueBlock)), falseBlock(std::move(falseBlock)) {}
 
     void dump(size_t level = 0) const override;
 };

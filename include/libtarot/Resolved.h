@@ -6,6 +6,7 @@
 #include "Type.h"
 #include "Utils.h"
 #include "TokenType.h"
+#include "Conainer.h"
 
 struct ResolvedStatement
 {
@@ -17,7 +18,7 @@ struct ResolvedStatement
     virtual void dump(size_t dump = 0) const = 0;
 };
 
-struct ResolvedExpression : public ResolvedStatement
+struct ResolvedExpression : public ConstantValueContainer<double>, public ResolvedStatement
 {
     Type type;
 
@@ -127,6 +128,24 @@ struct ResolvedGroupingExpression : public ResolvedExpression
     std::unique_ptr<ResolvedExpression> expr;
 
     ResolvedGroupingExpression(SourceLocation loc, std::unique_ptr<ResolvedExpression> expr) : ResolvedExpression(loc, expr->type), expr(std::move(expr)) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+struct ResolvedIfStatement : public ResolvedStatement
+{
+    std::unique_ptr<ResolvedExpression> condition;
+    std::unique_ptr<ResolvedBlock> trueBlock;
+    std::unique_ptr<ResolvedBlock> falseBlock;
+
+    ResolvedIfStatement(SourceLocation location,
+                   std::unique_ptr<ResolvedExpression> condition,
+                   std::unique_ptr<ResolvedBlock> trueBlock,
+                   std::unique_ptr<ResolvedBlock> falseBlock = nullptr)
+        : ResolvedStatement(location),
+          condition(std::move(condition)),
+          trueBlock(std::move(trueBlock)),
+          falseBlock(std::move(falseBlock)) {}
 
     void dump(size_t level = 0) const override;
 };

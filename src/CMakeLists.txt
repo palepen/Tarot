@@ -8,6 +8,7 @@ set(
     Resolved.cpp
     Sema.cpp
     Statement.cpp
+    Evaluate.cpp
 )
 
 add_library(libtarot ${SRC_FILES})

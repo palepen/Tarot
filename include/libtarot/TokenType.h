@@ -9,6 +9,8 @@ enum class TokenType : char
     FN,
     VOID,
     RETURN,
+    IF,
+    ELSE,
     NUMBER,
     SLASH,
     EQUALEQUAL,

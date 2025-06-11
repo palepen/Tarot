@@ -3,9 +3,11 @@
 #include <optional>
 #include "Resolved.h"
 #include "Parser.h"
+#include "Evaluate.h"
 
 class Sema
 {
+    ConstantExpressionEvaluator cee;
 public:
     std::vector<std::unique_ptr<FunctionDecl>> ast;
 
@@ -43,7 +45,8 @@ public:
     std::unique_ptr<ResolvedUnaryOperator> resolveUnaryOperator(const UnaryOperator &unary);
     std::unique_ptr<ResolvedBinaryOperator> resolveBinaryOperator(const BinaryOperator &binary);
     std::unique_ptr<ResolvedGroupingExpression> resolveGroupingExpression(const GroupingExpression &grouping);
-
+    std::unique_ptr<ResolvedIfStatement> resolveIfStatement(const IfStatement &stmt);
+    
 
     bool insertDeclToCurrentScope(ResolvedDecl &decl);
 };

@@ -31,6 +31,7 @@ public:
     llvm::Value *doubleToBool(llvm::Value *v);
     llvm::Value *boolToDouble(llvm::Value *v);
     llvm::Function *getCurrentFunction();
+    llvm::Value *generateIfStatement(const ResolvedIfStatement &stmt);
     
     void generateBuiltinPrintBody(const ResolvedFunctionDecl &println);
     void generateFunctionDecl(const ResolvedFunctionDecl &functionDecl);

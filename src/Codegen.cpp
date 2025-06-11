@@ -196,6 +196,11 @@ llvm::Value *Codegen::generateStatement(const ResolvedStatement &stmt)
         return generateReturnStatement(*returnStmt);
     }
 
+    if (auto *ifStmt = dynamic_cast<const ResolvedIfStatement *>(&stmt))
+    {
+        return generateIfStmt(*ifStmt);
+    }
+
     llvm_unreachable("unknown statement");
 }
 
@@ -209,6 +214,8 @@ llvm::Value *Codegen::generateReturnStatement(const ResolvedReturnStmt &stmt)
 
 llvm::Value *Codegen::generateExpression(const ResolvedExpression &expr)
 {
+    if (auto val = expr.getConstantValue())
+        return llvm::ConstantFP::get(builder.getDoubleTy(), *val);
     if (auto *number = dynamic_cast<const ResolvedNumberLiteral *>(&expr))
         return llvm::ConstantFP::get(builder.getDoubleTy(), number->value);
 
@@ -309,7 +316,7 @@ llvm::Value *Codegen::generateBinaryOperator(const ResolvedBinaryOperator &binOp
         rhsBB = builder.GetInsertBlock();
         builder.SetInsertPoint(mergeBB);
         llvm::PHINode *phi = builder.CreatePHI(builder.getInt1Ty(), 2);
-        
+
         for (auto it = pred_begin(mergeBB); it != pred_end(mergeBB); ++it)
         {
             if (*it == rhsBB)
@@ -389,4 +396,38 @@ void Codegen::generateConditionalOperator(const ResolvedExpression &op, llvm::Ba
 
     llvm::Value *val = doubleToBool(generateExpression(op));
     builder.CreateCondBr(val, trueBB, falseBB);
+}
+
+llvm::Value *Codegen::generateIfStatement(const ResolvedIfStatement &stmt)
+{
+    llvm::Function *function = getCurrentFunction();
+
+    auto *trueBB = llvm::BasicBlock::Create(context, "if.true");
+    auto *exitBB = llvm::BasicBlock::Create(context, "if.false");
+    
+    llvm::BasicBlock *elseBB = exitBB;
+
+    if (stmt.falseBlock)
+        elseBB = llvm::BasicBlock::Create(context, "if.false");
+    
+    llvm::Value *cond = generateExpression(*stmt.condition);
+
+    builder.CreateCondBr(doubleToBool(cond), trueBB, elseBB);
+
+    trueBB->insertInto(function);
+    builder.SetInsertPoint(trueBB);
+    generateBlock(*stmt.trueBlock);
+    builder.CreateBr(exitBB);
+
+    if (stmt.falseBlock)
+    {
+        elseBB->insertInto(function);
+        builder.SetInsertPoint(elseBB);
+        generateBlock(*stmt.falseBlock);
+        builder.CreateBr(exitBB);
+    }
+
+    exitBB->insertInto(function);
+    builder.SetInsertPoint(exitBB);
+    return nullptr;
 }
