@@ -4,10 +4,12 @@
 #include "Resolved.h"
 #include "Parser.h"
 #include "Evaluate.h"
+#include "ControlFlow.h"
 
 class Sema
 {
     ConstantExpressionEvaluator cee;
+    bool bailOnError_ = true;
 public:
     std::vector<std::unique_ptr<FunctionDecl>> ast;
 
@@ -27,6 +29,7 @@ public:
         }
     };
     explicit Sema(std::vector<std::unique_ptr<FunctionDecl>> &ast) : ast(std::move(ast)) {}
+    explicit Sema(std::vector<std::unique_ptr<FunctionDecl>> &ast, bool bailOnError_) : ast(std::move(ast)), bailOnError_(bailOnError_) {}
 
     std::vector<std::vector<ResolvedDecl *>> scopes;
     ResolvedFunctionDecl *currentFunction;
@@ -46,9 +49,11 @@ public:
     std::unique_ptr<ResolvedBinaryOperator> resolveBinaryOperator(const BinaryOperator &binary);
     std::unique_ptr<ResolvedGroupingExpression> resolveGroupingExpression(const GroupingExpression &grouping);
     std::unique_ptr<ResolvedIfStatement> resolveIfStatement(const IfStatement &stmt);
-    
+    std::unique_ptr<ResolvedWhileStatement> resolveWhileStatement(const WhileStatement &stmt);
 
+    bool runFlowSensitiveChecks(const ResolvedFunctionDecl &fn);
     bool insertDeclToCurrentScope(ResolvedDecl &decl);
+    bool checkReturnOnAllPaths(const ResolvedFunctionDecl &fn, const CFG &cfg);
 };
 
 #endif

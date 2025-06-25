@@ -1,4 +1,5 @@
 #include "libtarot/Sema.h"
+#include "libtarot/ControlFlow.h"
 #include <llvm/Support/ErrorHandling.h>
 
 std::vector<std::unique_ptr<ResolvedFunctionDecl>> Sema::resolveAST()
@@ -42,12 +43,70 @@ std::vector<std::unique_ptr<ResolvedFunctionDecl>> Sema::resolveAST()
             continue;
         }
         currentFunction->body = std::move(resolvedBody);
+        error |= runFlowSensitiveChecks(*currentFunction);
     }
-    if (error)
+
+    if (bailOnError_ && error)
         return {};
 
     return resolvedTree;
 }
+
+bool Sema::checkReturnOnAllPaths(const ResolvedFunctionDecl &fn, const CFG &cfg)
+{
+    if (fn.type.kind == Type::Kind::Void)
+        return false;
+
+    int returnCount = 0;
+    bool exitReached = false;
+
+    std::set<int> visited;
+    std::vector<int> worklist;
+    worklist.emplace_back(cfg.entry);
+
+    while (!worklist.empty())
+    {
+        int bb = worklist.back();
+        worklist.pop_back();
+
+        if (!visited.emplace(bb).second)
+            continue;
+
+        exitReached |= bb == cfg.exit;
+
+        const auto &[preds, succs, stmts] = cfg.basicBlocks[bb];
+
+        
+        if (!stmts.empty() && dynamic_cast<const ResolvedReturnStmt *>(stmts[0]))
+        {
+            ++returnCount;
+            continue;
+        }
+
+        for (auto &&[succ, reachable] : succs)
+            if (reachable)
+                worklist.emplace_back(succ);
+    }
+
+    if (exitReached || returnCount == 0)
+    {
+        report(fn.location,
+               returnCount > 0
+                   ? "non-void function doesn't return a value on every path"
+                   : "non-void function doesn't return a value");
+    }
+
+    return exitReached || returnCount == 0;
+}
+
+bool Sema::runFlowSensitiveChecks(const ResolvedFunctionDecl &fn)
+{
+    CFG cfg = CFGBuilder().build(fn);
+    bool error = false;
+    error |= checkReturnOnAllPaths(fn, cfg);
+
+    return error;
+};
 
 std::optional<Type> Sema::resolveType(Type parsedType)
 {
@@ -146,6 +205,9 @@ std::unique_ptr<ResolvedStatement> Sema::resolveStatement(const Statement &stmt)
 
     if (auto *ifStmt = dynamic_cast<const IfStatement *>(&stmt))
         return resolveIfStatement(*ifStmt);
+
+    if (auto *whileStmt = dynamic_cast<const WhileStatement *>(&stmt))
+        return resolveWhileStatement(*whileStmt);
     llvm_unreachable("unexpected Statement");
 }
 
@@ -310,19 +372,18 @@ std::unique_ptr<ResolvedBinaryOperator> Sema::resolveBinaryOperator(const Binary
 
     if (resolvedLHS->type.kind == Type::Kind::Void)
         return report(resolvedLHS->location, "void expression cannot be used as a LHS operand to binary operator");
-    
+
     if (resolvedRHS->type.kind == Type::Kind::Void)
         return report(resolvedRHS->location, "void expression cannot be used as a RHS operand to binary operator");
-    
+
     return std::make_unique<ResolvedBinaryOperator>(binOp.location, std::move(resolvedLHS), std::move(resolvedRHS), binOp.op);
 }
 
 std::unique_ptr<ResolvedGroupingExpression> Sema::resolveGroupingExpression(const GroupingExpression &grouping)
 {
-    varOrReturn(resolvedExpr, resolveExpression(*grouping.expr));    
+    varOrReturn(resolvedExpr, resolveExpression(*grouping.expr));
     return std::make_unique<ResolvedGroupingExpression>(grouping.location, std::move(resolvedExpr));
 }
-
 
 std::unique_ptr<ResolvedIfStatement> Sema::resolveIfStatement(const IfStatement &ifStmt)
 {
@@ -330,18 +391,32 @@ std::unique_ptr<ResolvedIfStatement> Sema::resolveIfStatement(const IfStatement 
 
     if (condition->type.kind != Type::Kind::Number)
         return report(condition->location, "expected number in condtion");
-    
+
     varOrReturn(resolvedTrueBlock, resolveBlock(*ifStmt.trueBlock));
 
     std::unique_ptr<ResolvedBlock> resolvedFalseBlock;
     if (ifStmt.falseBlock)
     {
         resolvedFalseBlock = resolveBlock(*ifStmt.falseBlock);
-        if(!resolvedFalseBlock)
+        if (!resolvedFalseBlock)
             return nullptr;
     }
 
     condition->setConstantValue(cee.evaluate(*condition, false));
 
-    return std::make_unique<ResolvedIfStatement> (ifStmt.location, std::move(condition), std::move(resolvedTrueBlock), std::move(resolvedFalseBlock));
+    return std::make_unique<ResolvedIfStatement>(ifStmt.location, std::move(condition), std::move(resolvedTrueBlock), std::move(resolvedFalseBlock));
+}
+
+std::unique_ptr<ResolvedWhileStatement> Sema::resolveWhileStatement(const WhileStatement &stmt)
+{
+    varOrReturn(cond, resolveExpression(*stmt.condition));
+
+    if (cond->type.kind != Type::Kind::Number)
+        return report(cond->location, "expected number in condition");
+
+    varOrReturn(body, resolveBlock(*stmt.body));
+
+    cond->setConstantValue(cee.evaluate(*cond, false));
+
+    return std::make_unique<ResolvedWhileStatement>(stmt.location, std::move(cond), std::move(body));
 }

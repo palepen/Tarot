@@ -198,7 +198,12 @@ llvm::Value *Codegen::generateStatement(const ResolvedStatement &stmt)
 
     if (auto *ifStmt = dynamic_cast<const ResolvedIfStatement *>(&stmt))
     {
-        return generateIfStmt(*ifStmt);
+        return generateIfStatement(*ifStmt);
+    }
+
+    if (auto *whileStmt = dynamic_cast<const ResolvedWhileStatement *>(&stmt))
+    {
+        return generateWhileStatement(*whileStmt);
     }
 
     llvm_unreachable("unknown statement");
@@ -331,6 +336,7 @@ llvm::Value *Codegen::generateBinaryOperator(const ResolvedBinaryOperator &binOp
     llvm::Value *lhs = generateExpression(*binOp.lhs);
     llvm::Value *rhs = generateExpression(*binOp.rhs);
 
+
     switch (op)
     {
     case TokenType::PLUS:
@@ -404,12 +410,12 @@ llvm::Value *Codegen::generateIfStatement(const ResolvedIfStatement &stmt)
 
     auto *trueBB = llvm::BasicBlock::Create(context, "if.true");
     auto *exitBB = llvm::BasicBlock::Create(context, "if.false");
-    
+
     llvm::BasicBlock *elseBB = exitBB;
 
     if (stmt.falseBlock)
         elseBB = llvm::BasicBlock::Create(context, "if.false");
-    
+
     llvm::Value *cond = generateExpression(*stmt.condition);
 
     builder.CreateCondBr(doubleToBool(cond), trueBB, elseBB);
@@ -429,5 +435,27 @@ llvm::Value *Codegen::generateIfStatement(const ResolvedIfStatement &stmt)
 
     exitBB->insertInto(function);
     builder.SetInsertPoint(exitBB);
+    return nullptr;
+}
+
+llvm::Value *Codegen::generateWhileStatement(const ResolvedWhileStatement &whileStmt)
+{
+    llvm::Function *function = getCurrentFunction();
+
+    auto *header = llvm::BasicBlock::Create(context, "while.cond", function);
+    auto *body = llvm::BasicBlock::Create(context, "while.body", function);
+    auto *exit = llvm::BasicBlock::Create(context, "while.exit", function);
+
+    builder.CreateBr(header);
+
+    builder.SetInsertPoint(header);
+    llvm::Value *cond = generateExpression(*whileStmt.condition);
+    builder.CreateCondBr(doubleToBool(cond), body, exit);
+
+    builder.SetInsertPoint(body);
+    generateBlock(*whileStmt.body);
+    builder.CreateBr(header);
+
+    builder.SetInsertPoint(exit);
     return nullptr;
 }

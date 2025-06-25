@@ -5,6 +5,8 @@ add_executable(tests
     test_helper.cpp
     test_sema.cpp
     test_codegen.cpp
+    test_operators.cpp
+    test_control_flow.cpp
 )
 
 target_include_directories(tests

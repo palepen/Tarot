@@ -106,6 +106,14 @@ TokenType Lexer::getTokenType(const char &currentChar)
         return TokenType::LT;
     case '!':
         return TokenType::EXCL;
+    case '+':
+        return TokenType::PLUS;
+    case '-':
+        return TokenType::MINUS;
+    case '*':
+        return TokenType::ASTERISK;
+    case '/':
+        return TokenType::SLASH;
     default:
         return TokenType::UNK;
     }

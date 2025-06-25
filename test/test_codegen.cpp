@@ -46,7 +46,7 @@ TEST_CASE("Codegen: Valid function call with definition", "[Codegen]") {
     auto [functions, parseSuccess] = parser.parseSourceFile(true);
     REQUIRE(parseSuccess == true);
 
-    Sema sema(functions);
+    Sema sema(functions, false);
     auto resolved = sema.resolveAST();
     REQUIRE(resolved.size() == 3); // println, add, main
 
@@ -79,7 +79,7 @@ TEST_CASE("Codegen: Valid number return statement", "[Codegen]") {
     Parser parser(lexer);
     auto [functions, parseSuccess] = parser.parseSourceFile(false);
     REQUIRE(parseSuccess == true);
-    Sema sema(functions);
+    Sema sema(functions, false);
     auto resolved = sema.resolveAST();
     REQUIRE(resolved.size() == 3); // println, getFive, main
 
@@ -159,7 +159,7 @@ TEST_CASE("Codegen: Multiple functions with call", "[Codegen]") {
     auto [functions, parseSuccess] = parser.parseSourceFile(true);
     REQUIRE(parseSuccess == true);
 
-    Sema sema(functions);
+    Sema sema(functions, false);
     auto resolved = sema.resolveAST();
     REQUIRE(resolved.size() == 3); // println, helper, main
 
@@ -188,7 +188,7 @@ TEST_CASE("Codegen: Unreachable code after return", "[Codegen]") {
     auto [functions, parseSuccess] = parser.parseSourceFile(false);
     REQUIRE(parseSuccess == true);
 
-    Sema sema(functions);
+    Sema sema(functions, false);
     auto resolved = sema.resolveAST();
     REQUIRE(resolved.size() == 3); // println, foo
 
@@ -213,7 +213,7 @@ TEST_CASE("Codegen: Multiple statements with valid calls", "[Codegen]") {
     auto [functions, parseSuccess] = parser.parseSourceFile(false);
     REQUIRE(parseSuccess == true);
 
-    Sema sema(functions);
+    Sema sema(functions, false);
     auto resolved = sema.resolveAST();
     REQUIRE(resolved.size() == 4); // println, log, complex, main
 

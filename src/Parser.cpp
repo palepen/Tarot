@@ -117,8 +117,6 @@ std::unique_ptr<Block> Parser::parseBlock()
     matchOrReturn(TokenType::RBRACE, "Expected '}'");
     eatNextToken(); // }
 
-    matchOrReturn(TokenType::SEMICOLON, "Expected ';'");
-    eatNextToken(); // ;
 
     return std::make_unique<Block>(location, std::move(statements));
 }
@@ -134,16 +132,18 @@ void Parser::synchronizeOn(TokenType type)
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
-    if(nextToken.type == TokenType::IF)
+    if (nextToken.type == TokenType::IF)
         return parseIfStatement();
+
+    if (nextToken.type == TokenType::WHILE)
+        return parseWhileStatement();
 
     if (nextToken.type == TokenType::RETURN)
         return parseReturnStatement();
 
     varOrReturn(expr, parseExpression());
-    matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of expression")
-        eatNextToken();
-
+    matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of expression");
+    eatNextToken();
     return expr;
 }
 
@@ -161,9 +161,8 @@ std::unique_ptr<ReturnStatement> Parser::parseReturnStatement()
             return nullptr;
         }
     }
-
-    matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of the return statement")
-        eatNextToken(); // ;
+    matchOrReturn(TokenType::SEMICOLON, "Expected ';' at the end of the return statement");
+    eatNextToken(); // ;
 
     return std::make_unique<ReturnStatement>(location, std::move(expr));
 }
@@ -351,28 +350,30 @@ bool checkRightAssoc(Token op)
 {
     return true;
 }
+
 std::unique_ptr<Expression> Parser::parseExpressionRHS(std::unique_ptr<Expression> lhs, int precedence)
 {
     while (true)
     {
         Token op = nextToken;
         int curOpPrec = getTokenPrecedence(op.type);
-
+        
         if (curOpPrec < precedence)
+        {
             return lhs;
-
+        }
         eatNextToken();
-
+        
         varOrReturn(rhs, parsePrefixExpression());
-
+        
         if (curOpPrec < getTokenPrecedence(nextToken.type))
         {
             rhs = parseExpressionRHS(std::move(rhs), curOpPrec + 1);
             if (!rhs)
                 return nullptr;
         }
-
         lhs = std::make_unique<BinaryOperator>(op.source, std::move(lhs), std::move(rhs), op.type);
+
     }
 }
 
@@ -385,14 +386,13 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression()
     eatNextToken();
 
     varOrReturn(rhs, parsePrefixExpression());
-
     return std::make_unique<UnaryOperator>(tok.source, std::move(rhs), tok.type);
 }
 
 std::unique_ptr<IfStatement> Parser::parseIfStatement()
 {
     SourceLocation loc = nextToken.source;
-    eatNextToken();  // 'if'
+    eatNextToken(); // 'if'
 
     varOrReturn(condtion, parseExpression());
 
@@ -410,7 +410,7 @@ std::unique_ptr<IfStatement> Parser::parseIfStatement()
     std::unique_ptr<Block> falseBlock;
 
     if (nextToken.type == TokenType::IF)
-    {   
+    {
         varOrReturn(elseIf, parseIfStatement());
 
         SourceLocation loc = elseIf->location;
@@ -418,7 +418,7 @@ std::unique_ptr<IfStatement> Parser::parseIfStatement()
 
         stmts.emplace_back(std::move(elseIf));
 
-        falseBlock = std::make_unique<Block>(loc, stmts);
+        falseBlock = std::make_unique<Block>(loc, std::move(stmts));
     }
     else
     {
@@ -429,6 +429,21 @@ std::unique_ptr<IfStatement> Parser::parseIfStatement()
 
     if (!falseBlock)
         return nullptr;
-    
+
     return std::make_unique<IfStatement>(loc, std::move(condtion), std::move(trueBlock), std::move(falseBlock));
+}
+
+std::unique_ptr<WhileStatement> Parser::parseWhileStatement()
+{
+    SourceLocation loc = nextToken.source;
+
+    eatNextToken(); // while
+
+    varOrReturn(cond, parseExpression());
+
+    matchOrReturn(TokenType::LBRACE, "expected 'while' body");
+
+    varOrReturn(body, parseBlock());
+
+    return std::make_unique<WhileStatement>(loc, std::move(cond), std::move(body));
 }

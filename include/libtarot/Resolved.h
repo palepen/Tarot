@@ -108,7 +108,7 @@ struct ResolvedBinaryOperator : public ResolvedExpression
     std::unique_ptr<ResolvedExpression> rhs;
     TokenType op;
 
-    ResolvedBinaryOperator(SourceLocation location, std::unique_ptr<ResolvedExpression> lhs, std::unique_ptr<ResolvedExpression> rhs, TokenType op) : ResolvedExpression(location, lhs->type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    ResolvedBinaryOperator(SourceLocation location, std::unique_ptr<ResolvedExpression> lhs, std::unique_ptr<ResolvedExpression> rhs, TokenType op) : ResolvedExpression(location, lhs->type), lhs(std::move(lhs)), rhs(std::move(rhs)), op(op) {}
 
     void dump(size_t level = 0) const override;
 };
@@ -146,6 +146,21 @@ struct ResolvedIfStatement : public ResolvedStatement
           condition(std::move(condition)),
           trueBlock(std::move(trueBlock)),
           falseBlock(std::move(falseBlock)) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+
+struct ResolvedWhileStatement : public ResolvedStatement
+{
+    std::unique_ptr<ResolvedExpression> condition;
+    std::unique_ptr<ResolvedBlock> body;
+
+    ResolvedWhileStatement(SourceLocation location,
+                   std::unique_ptr<ResolvedExpression> condition,
+                   std::unique_ptr<ResolvedBlock> body)    : ResolvedStatement(location),
+          condition(std::move(condition)),
+          body(std::move(body)) {}
 
     void dump(size_t level = 0) const override;
 };

@@ -32,6 +32,7 @@ public:
     llvm::Value *boolToDouble(llvm::Value *v);
     llvm::Function *getCurrentFunction();
     llvm::Value *generateIfStatement(const ResolvedIfStatement &stmt);
+    llvm::Value *generateWhileStatement(const ResolvedWhileStatement &whileStmt);
     
     void generateBuiltinPrintBody(const ResolvedFunctionDecl &println);
     void generateFunctionDecl(const ResolvedFunctionDecl &functionDecl);

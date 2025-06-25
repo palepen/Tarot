@@ -5,10 +5,10 @@ set(
     Lexer.cpp
     Parser.cpp
     Report.cpp
-    Resolved.cpp
     Sema.cpp
-    Statement.cpp
+    Dump.cpp
     Evaluate.cpp
+    ControlFlow.cpp
 )
 
 add_library(libtarot ${SRC_FILES})

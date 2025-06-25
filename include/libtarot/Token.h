@@ -13,7 +13,8 @@ const std::unordered_map<std::string_view, TokenType>
         {"return", TokenType::RETURN},
         {"number", TokenType::NUMBER},
         {"if", TokenType::IF},
-        {"else", TokenType::ELSE}
+        {"else", TokenType::ELSE},
+        {"while", TokenType::WHILE}
     };
 
 

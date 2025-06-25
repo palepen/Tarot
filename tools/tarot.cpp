@@ -4,7 +4,7 @@
 #include "libtarot/Parser.h"
 #include "libtarot/Sema.h"
 #include "libtarot/Codegen.h"
-
+#include "libtarot/ControlFlow.h"
 void displayHelp()
 {
     std::cout << "Usage:\n"
@@ -14,7 +14,8 @@ void displayHelp()
               << "    -o <file>   write executable to <file>\n"
               << "    -ast-dump   print the abstract syntax tree\n"
               << "    -res-dump   print the resolved syntax tree\n"
-              << "    -llvm-dump  print the llvm module\n";
+              << "    -llvm-dump  print the llvm module\n"
+              << "    -cfg-dump    print the control flow graph\n";
 }
 
 struct CompilerOptions
@@ -56,16 +57,17 @@ CompilerOptions parseArguments(int argc, const char **argv)
         {
             if (arg == "-h")
                 options.displayHelp = true;
-            else if(arg == "-o")
+            else if (arg == "-o")
                 options.output = ++idx >= argc ? "" : argv[idx];
-            else if(arg == "-ast-dump")
+            else if (arg == "-ast-dump")
                 options.astDump = true;
-            else if(arg == "-res-dump")
+            else if (arg == "-res-dump")
                 options.resDump = true;
-            else if(arg == "-llvm-dump")
+            else if (arg == "-llvm-dump")
                 options.llvmDump = true;
-            else if(arg == "-cfg-dump")
+            else if (arg == "-cfg-dump")
                 options.cfgDump = true;
+
             else
                 error("unexpected option '" + std::string(arg) + "\'");
         }
@@ -85,11 +87,10 @@ int main(int argc, const char **argv)
         return 0;
     }
 
-    if(options.source.empty())
+    if (options.source.empty())
     {
         error("no source file specified");
     }
-
 
     std::ifstream file(options.source);
 
@@ -105,10 +106,10 @@ int main(int argc, const char **argv)
 
     Lexer lexer(&sourceFile);
     Parser parser(lexer);
-    
+
     auto [ast, success] = parser.parseSourceFile(true);
 
-    if(options.astDump)
+    if (options.astDump)
     {
         for (auto &it : ast)
         {
@@ -117,9 +118,8 @@ int main(int argc, const char **argv)
         return 0;
     }
 
-    if(!success)
+    if (!success)
         return 1;
-
 
     Sema sema(ast);
     std::vector<std::unique_ptr<ResolvedFunctionDecl>> resolvedTree = sema.resolveAST();
@@ -132,16 +132,27 @@ int main(int argc, const char **argv)
         return 0;
     }
 
-    if(resolvedTree.empty())
+    if (options.cfgDump)
+    {
+        for (auto &&fn : resolvedTree)
+        {
+            std::cerr << fn->identifier << ':' << '\n';
+            CFGBuilder().build(*fn).dump();
+        }
+        return 0;
+    }
+
+    if (resolvedTree.empty())
         return 1;
-    
+
     Codegen codegen(resolvedTree, options.source.string());
 
     llvm::Module *llvmIR = codegen.generateIR();
 
     if (options.llvmDump)
     {
-        llvmIR->print(llvm::outs(), nullptr);;
+        llvmIR->print(llvm::outs(), nullptr);
+        ;
         return 0;
     }
 
@@ -156,11 +167,11 @@ int main(int argc, const char **argv)
     std::stringstream command;
     command << "clang " << llvmIRPath;
 
-    if(!options.output.empty())
+    if (!options.output.empty())
     {
         command << " -o " << options.output.c_str();
     }
-    
+
     std::cout << command.str() << std::endl;
     int ret = std::system(command.str().c_str());
     std::filesystem::remove(llvmIRPath);

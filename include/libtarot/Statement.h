@@ -2,7 +2,7 @@
 #define STATEMENT_H
 #include "Source.h"
 #include "TokenType.h"
-#include "Declaration.h"
+
 #include <memory>
 #include <vector>
 
@@ -14,6 +14,23 @@ struct Statement
     virtual ~Statement() = default;
     virtual void dump(size_t level = 0) const = 0;
 };
+
+struct Block
+{
+    SourceLocation location;
+    std::vector<std::unique_ptr<Statement>> statements;
+    
+    Block(SourceLocation location)
+    : location(location) {}
+    
+    Block(SourceLocation location, std::vector<std::unique_ptr<Statement>> statements)
+    : location(location), statements(std::move(statements)) {}
+
+  void dump(size_t level = 0) const;
+  
+};
+
+
 
 struct Expression : public Statement
 {
@@ -63,7 +80,7 @@ struct BinaryOperator : public Expression
     std::unique_ptr<Expression> rhs;
     TokenType op;
 
-    BinaryOperator(SourceLocation location, std::unique_ptr<Expression> lhs, std::unique_ptr<Expression> rhs, TokenType op) : Expression(location), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    BinaryOperator(SourceLocation location, std::unique_ptr<Expression> lhs, std::unique_ptr<Expression> rhs, TokenType op) : Expression(location), lhs(std::move(lhs)), rhs(std::move(rhs)), op(op) {}
 
     void dump(size_t level = 0) const override;
 };
@@ -102,4 +119,13 @@ struct IfStatement : public Statement
     void dump(size_t level = 0) const override;
 };
 
+struct WhileStatement : public Statement
+{
+    std::unique_ptr<Expression> condition;
+    std::unique_ptr<Block> body;
+
+    WhileStatement(SourceLocation loc, std::unique_ptr<Expression> condition, std::unique_ptr<Block> body) : Statement(loc), condition(std::move(condition)), body(std::move(body)) {}
+
+    void dump(size_t level =  0) const override;
+};
 #endif

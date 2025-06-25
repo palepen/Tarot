@@ -1,5 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
+
 #include <vector>
 #include "Lexer.h"
 #include "Declaration.h"
@@ -46,6 +47,7 @@ public:
     std::unique_ptr<Expression> parseExpressionRHS(std::unique_ptr<Expression> lhs, int precedence);
     std::unique_ptr<Expression> parsePrefixExpression();
     std::unique_ptr<IfStatement> parseIfStatement();
+    std::unique_ptr<WhileStatement> parseWhileStatement();
     
     void synchronizeOn(TokenType type);
     void synchronize();
