@@ -2,6 +2,15 @@
 
 #include "libtarot/Evaluate.h"
 
+std::optional<double> ConstantExpressionEvaluator::evaluateDeclRefExpr(const ResolvedDeclarationRefExpr &dre, bool allowSideEffects)
+{
+    const auto *rvd = dynamic_cast<const ResolvedVarDecl *>(dre.decl);
+    if (!rvd || rvd->isMutable || !rvd->initializer)
+        return std::nullopt;
+
+    return evaluate(*rvd->initializer, allowSideEffects);
+}
+
 std::optional<double> ConstantExpressionEvaluator::evaluate(const ResolvedExpression &expr, bool allowSideEffects)
 {
     if (std::optional<double> val = expr.getConstantValue())
@@ -20,6 +29,9 @@ std::optional<double> ConstantExpressionEvaluator::evaluate(const ResolvedExpres
     {
         return evaluateUnaryOperator(*unaryOp, allowSideEffects);
     }
+
+    if (const auto *declRefExpr = dynamic_cast<const ResolvedDeclarationRefExpr *>(&expr))
+        return evaluateDeclRefExpr(*declRefExpr, allowSideEffects);
 
     return std::nullopt;
 }

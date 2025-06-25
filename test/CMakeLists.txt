@@ -8,7 +8,8 @@ add_executable(tests
     test_operators.cpp
     test_control_flow.cpp
     test_constexpr.cpp
-)
+    test_variables.cpp
+    )
 
 target_include_directories(tests
     PRIVATE

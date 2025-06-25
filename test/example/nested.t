@@ -1,9 +1,9 @@
 fn logic(): void {
-    let i = 0;
+    var i = 0;
     while (i < 2) {
         if (i == 1) {
             println(100);
-        };
+        }
         i = i + 1;
     }
 }

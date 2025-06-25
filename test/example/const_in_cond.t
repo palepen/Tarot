@@ -4,7 +4,8 @@ fn isZero(): number {
 fn main(): void {
     if (isZero()) {
         println(1);
-    } else {
+    } 
+    else {
         println(0);
     }
 }

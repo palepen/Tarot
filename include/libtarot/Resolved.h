@@ -139,9 +139,9 @@ struct ResolvedIfStatement : public ResolvedStatement
     std::unique_ptr<ResolvedBlock> falseBlock;
 
     ResolvedIfStatement(SourceLocation location,
-                   std::unique_ptr<ResolvedExpression> condition,
-                   std::unique_ptr<ResolvedBlock> trueBlock,
-                   std::unique_ptr<ResolvedBlock> falseBlock = nullptr)
+                        std::unique_ptr<ResolvedExpression> condition,
+                        std::unique_ptr<ResolvedBlock> trueBlock,
+                        std::unique_ptr<ResolvedBlock> falseBlock = nullptr)
         : ResolvedStatement(location),
           condition(std::move(condition)),
           trueBlock(std::move(trueBlock)),
@@ -150,17 +150,60 @@ struct ResolvedIfStatement : public ResolvedStatement
     void dump(size_t level = 0) const override;
 };
 
-
 struct ResolvedWhileStatement : public ResolvedStatement
 {
     std::unique_ptr<ResolvedExpression> condition;
     std::unique_ptr<ResolvedBlock> body;
 
     ResolvedWhileStatement(SourceLocation location,
-                   std::unique_ptr<ResolvedExpression> condition,
-                   std::unique_ptr<ResolvedBlock> body)    : ResolvedStatement(location),
-          condition(std::move(condition)),
-          body(std::move(body)) {}
+                           std::unique_ptr<ResolvedExpression> condition,
+                           std::unique_ptr<ResolvedBlock> body) : ResolvedStatement(location),
+                                                                  condition(std::move(condition)),
+                                                                  body(std::move(body)) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+struct ResolvedVarDecl : public ResolvedDecl
+{
+    std::unique_ptr<ResolvedExpression> initializer;
+    bool isMutable;
+
+    ResolvedVarDecl(SourceLocation location,
+                    std::string identifier,
+                    Type type,
+                    bool isMutable,
+                    std::unique_ptr<ResolvedExpression> initializer = nullptr)
+        : ResolvedDecl(location, std::move(identifier), type),
+          initializer(std::move(initializer)),
+          isMutable(isMutable) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+struct ResolvedDeclStatement : public ResolvedStatement
+{
+    std::unique_ptr<ResolvedVarDecl> varDecl;
+
+    ResolvedDeclStatement(SourceLocation location,
+                          std::unique_ptr<ResolvedVarDecl> varDecl)
+        : ResolvedStatement(location),
+          varDecl(std::move(varDecl)) {}
+
+    void dump(size_t level = 0) const override;
+};
+
+struct ResolvedAssignment : public ResolvedStatement
+{
+    std::unique_ptr<ResolvedDeclarationRefExpr> variable;
+    std::unique_ptr<ResolvedExpression> expr;
+
+    ResolvedAssignment(SourceLocation location,
+                       std::unique_ptr<ResolvedDeclarationRefExpr> variable,
+                       std::unique_ptr<ResolvedExpression> expr)
+        : ResolvedStatement(location),
+          variable(std::move(variable)),
+          expr(std::move(expr)) {}
 
     void dump(size_t level = 0) const override;
 };

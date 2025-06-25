@@ -71,10 +71,16 @@ int CFGBuilder::insertStmt(const ResolvedStatement &stmt, int block)
         return insertWhileStatement(*whileStmt, block);
 
     if (auto *expr = dynamic_cast<const ResolvedExpression *>(&stmt))
-        return insertExpresssion(*expr, block);
+        return insertExpression(*expr, block);
 
     if (auto *returnStmt = dynamic_cast<const ResolvedReturnStmt *>(&stmt))
         return insertReturnStatement(*returnStmt, block);
+
+    if (auto *declStmt = dynamic_cast<const ResolvedDeclStatement *>(&stmt))
+        return insertDeclStmt(*declStmt, block);
+
+    if (auto *assignment = dynamic_cast<const ResolvedAssignment *>(&stmt))
+        return insertAssignment(*assignment, block);
 
     llvm_unreachable("unexpected Expression");
 }
@@ -85,30 +91,30 @@ int CFGBuilder::insertReturnStatement(const ResolvedReturnStmt &stmt, int block)
     cfg.insertStmt(&stmt, block);
 
     if (stmt.expr)
-        return insertExpresssion(*stmt.expr, block);
+        return insertExpression(*stmt.expr, block);
 
     return block;
 }
 
-int CFGBuilder::insertExpresssion(const ResolvedExpression &expr, int block)
+int CFGBuilder::insertExpression(const ResolvedExpression &expr, int block)
 {
     cfg.insertStmt(&expr, block);
 
     if (const auto *call = dynamic_cast<const ResolvedCallExpr *>(&expr))
     {
         for (auto it = call->arguments.rbegin(); it != call->arguments.rend(); ++it)
-            insertExpresssion(**it, block);
+            insertExpression(**it, block);
         return block;
     }
 
     if (const auto *grouping = dynamic_cast<const ResolvedGroupingExpression *>(&expr))
-        return insertExpresssion(*grouping->expr, block);
+        return insertExpression(*grouping->expr, block);
 
     if (const auto *binop = dynamic_cast<const ResolvedBinaryOperator *>(&expr))
-        return insertExpresssion(*binop->rhs, block), insertExpresssion(*binop->lhs, block);
+        return insertExpression(*binop->rhs, block), insertExpression(*binop->lhs, block);
 
     if (const auto *unop = dynamic_cast<const ResolvedUnaryOperator *>(&expr))
-        return insertExpresssion(*unop->operand, block);
+        return insertExpression(*unop->operand, block);
 
     return block;
 }
@@ -128,7 +134,7 @@ int CFGBuilder::insertIfStatement(const ResolvedIfStatement &stmt, int exit)
     cfg.insertEdge(entry, falseBlock, val.value_or(0) == 0);
 
     cfg.insertStmt(&stmt, entry);
-    return insertExpresssion(*stmt.condition, entry);
+    return insertExpression(*stmt.condition, entry);
 }
 
 int CFGBuilder::insertWhileStatement(const ResolvedWhileStatement &stmt, int exit)
@@ -143,7 +149,7 @@ int CFGBuilder::insertWhileStatement(const ResolvedWhileStatement &stmt, int exi
     cfg.insertEdge(header, exit, val.value_or(0) == 0);
 
     cfg.insertStmt(&stmt, header);
-    insertExpresssion(*stmt.condition, header);
+    insertExpression(*stmt.condition, header);
 
     return header;
 }
@@ -174,4 +180,20 @@ void CFG::dump(size_t level) const
             (*it)->dump(1);
         std::cerr << '\n';
     }
+}
+
+int CFGBuilder::insertDeclStmt(const ResolvedDeclStatement &stmt, int block)
+{
+    cfg.insertStmt(&stmt, block);
+
+    if (const auto &init = stmt.varDecl->initializer)
+        return insertExpression(*init, block);
+
+    return block;
+}
+
+int CFGBuilder::insertAssignment(const ResolvedAssignment &stmt, int block)
+{
+    cfg.insertStmt(&stmt, block);
+    return insertExpression(*stmt.expr, block);
 }

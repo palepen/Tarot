@@ -59,8 +59,10 @@ Token Lexer::getNextToken()
         return getNextToken();
     }
 
-    if (currentChar == '=' && peekNextChar() == '=')
+    if (currentChar == '=')
     {
+        if (peekNextChar() != '=')
+            return Token{tokenStartLocation, TokenType::EQUAL};
         eatNextChar();
         return Token{tokenStartLocation, TokenType::EQUALEQUAL};
     }

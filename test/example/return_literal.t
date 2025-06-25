@@ -5,5 +5,5 @@ fn getFive(): number
 
 fn main(): void
 {
-    getFive();
+    let x = getFive();
 }

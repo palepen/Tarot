@@ -19,18 +19,15 @@ struct Block
 {
     SourceLocation location;
     std::vector<std::unique_ptr<Statement>> statements;
-    
+
     Block(SourceLocation location)
-    : location(location) {}
-    
+        : location(location) {}
+
     Block(SourceLocation location, std::vector<std::unique_ptr<Statement>> statements)
-    : location(location), statements(std::move(statements)) {}
+        : location(location), statements(std::move(statements)) {}
 
-  void dump(size_t level = 0) const;
-  
+    void dump(size_t level = 0) const;
 };
-
-
 
 struct Expression : public Statement
 {
@@ -105,7 +102,6 @@ struct GroupingExpression : public Expression
     void dump(size_t level = 0) const override;
 };
 
-
 struct IfStatement : public Statement
 {
     std::unique_ptr<Expression> condition;
@@ -113,8 +109,8 @@ struct IfStatement : public Statement
     std::unique_ptr<Block> falseBlock;
 
     IfStatement(SourceLocation loc, std::unique_ptr<Expression> condition,
-               std::unique_ptr<Block> trueBlock,
-               std::unique_ptr<Block> falseBlock = nullptr) : Statement(loc), condition(std::move(condition)), trueBlock(std::move(trueBlock)), falseBlock(std::move(falseBlock)) {}
+                std::unique_ptr<Block> trueBlock,
+                std::unique_ptr<Block> falseBlock = nullptr) : Statement(loc), condition(std::move(condition)), trueBlock(std::move(trueBlock)), falseBlock(std::move(falseBlock)) {}
 
     void dump(size_t level = 0) const override;
 };
@@ -126,6 +122,8 @@ struct WhileStatement : public Statement
 
     WhileStatement(SourceLocation loc, std::unique_ptr<Expression> condition, std::unique_ptr<Block> body) : Statement(loc), condition(std::move(condition)), body(std::move(body)) {}
 
-    void dump(size_t level =  0) const override;
+    void dump(size_t level = 0) const override;
 };
+
+
 #endif

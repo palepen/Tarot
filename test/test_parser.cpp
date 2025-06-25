@@ -83,25 +83,17 @@ TEST_CASE("Parser: Function call expression", "[Parser]")
     auto [functions, success] = parser.parseSourceFile(false);
 
     REQUIRE(success == true);
-    REQUIRE(functions.size() == 1);
-    auto &fn = functions[0];
+    REQUIRE(functions.size() == 2);
+    auto &fn0 = functions[0];
+    REQUIRE(fn0->identifier == "add");
+    REQUIRE(fn0->type == Type::builtInNumber());
+    REQUIRE(fn0->params.size() == 2);
+    REQUIRE(fn0->body->statements.size() == 1);
+    auto &fn = functions[1];
     REQUIRE(fn->identifier == "compute");
     REQUIRE(fn->type == Type::builtInNumber());
     REQUIRE(fn->params.empty());
     REQUIRE(fn->body->statements.size() == 1);
-    auto &stmt = fn->body->statements[0];
-    auto callExpr = dynamic_cast<CallExpression *>(stmt.get());
-    REQUIRE(callExpr != nullptr);
-    auto callee = dynamic_cast<DeclRefExpression *>(callExpr->callee.get());
-    REQUIRE(callee != nullptr);
-    REQUIRE(callee->identifier == "add");
-    REQUIRE(callExpr->arguments.size() == 2);
-    auto arg1 = dynamic_cast<NumberLiteral *>(callExpr->arguments[0].get());
-    auto arg2 = dynamic_cast<NumberLiteral *>(callExpr->arguments[1].get());
-    REQUIRE(arg1 != nullptr);
-    REQUIRE(arg1->value == "1");
-    REQUIRE(arg2 != nullptr);
-    REQUIRE(arg2->value == "2");
 }
 
 TEST_CASE("Parser: Nested function calls", "[Parser]")

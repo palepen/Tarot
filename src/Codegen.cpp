@@ -206,6 +206,16 @@ llvm::Value *Codegen::generateStatement(const ResolvedStatement &stmt)
         return generateWhileStatement(*whileStmt);
     }
 
+    if (auto *declStmt = dynamic_cast<const ResolvedDeclStatement *>(&stmt))
+    {
+        return generateDeclStmt(*declStmt);
+    }
+
+    if (auto *assignment = dynamic_cast<const ResolvedAssignment *>(&stmt))
+    {
+        return generateAssignment(*assignment);
+    }
+
     llvm_unreachable("unknown statement");
 }
 
@@ -336,7 +346,6 @@ llvm::Value *Codegen::generateBinaryOperator(const ResolvedBinaryOperator &binOp
     llvm::Value *lhs = generateExpression(*binOp.lhs);
     llvm::Value *rhs = generateExpression(*binOp.rhs);
 
-
     switch (op)
     {
     case TokenType::PLUS:
@@ -458,4 +467,23 @@ llvm::Value *Codegen::generateWhileStatement(const ResolvedWhileStatement &while
 
     builder.SetInsertPoint(exit);
     return nullptr;
+}
+
+llvm::Value *Codegen::generateDeclStmt(const ResolvedDeclStatement &stmt)
+{
+    llvm::Function *function = getCurrentFunction();
+    const auto *decl = stmt.varDecl.get();
+
+    llvm::AllocaInst *var = allocateStackVariable(function, decl->identifier);
+
+    if (const auto &init = decl->initializer)
+        builder.CreateStore(generateExpression(*init), var);
+
+    declarations[decl] = var;
+    return nullptr;
+}
+
+llvm::Value *Codegen::generateAssignment(const ResolvedAssignment &stmt)
+{
+    return builder.CreateStore(generateExpression(*stmt.expr), declarations[stmt.variable->decl]);
 }

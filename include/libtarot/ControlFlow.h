@@ -40,8 +40,12 @@ public:
     int insertStmt(const ResolvedStatement &stmt, int block);
     int insertIfStatement(const ResolvedIfStatement &stmt, int block);
     int insertWhileStatement(const ResolvedWhileStatement &stmt, int block);
-    int insertExpresssion(const ResolvedExpression &stmt, int block);
+    int insertExpression(const ResolvedExpression &stmt, int block);
     int insertReturnStatement(const ResolvedReturnStmt &stmt, int block);
+    int insertDeclStmt(const ResolvedDeclStatement &stmt, int block);
+    int insertAssignment(const ResolvedAssignment &stmt, int block);
+
+
 };
 
 #endif

@@ -6,7 +6,7 @@ fn baz(): void {
         println(2);
     } else {
         println(3);
-    };
+    }
 }
 fn main(): void {
     baz();

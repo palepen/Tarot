@@ -1,3 +1,7 @@
+fn add(a:number, b:number): number{
+    return a + b;
+}
+
 fn compute(): number { 
-    add(1, 2); 
+    return add(1, 2); 
 }

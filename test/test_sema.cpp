@@ -45,7 +45,7 @@ TEST_CASE("Sema: Valid function call with definition", "[Sema]")
     REQUIRE(resolved[2]->body->statements.size() == 1);
 }
 
-TEST_CASE("Sema: Undefined function call", "[Sema]")
+TEST_CASE("Sema: function call", "[Sema]")
 {
     std::string path = "function_call.t";
     std::string source = readFile(path);
@@ -57,7 +57,7 @@ TEST_CASE("Sema: Undefined function call", "[Sema]")
 
     Sema sema(functions);
     auto resolved = sema.resolveAST();
-    REQUIRE(resolved.empty()); // Fails due to undefined 'add'
+    REQUIRE(!resolved.empty()); 
 }
 
 TEST_CASE("Sema: Custom type failure", "[Sema]")

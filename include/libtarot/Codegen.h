@@ -33,7 +33,9 @@ public:
     llvm::Function *getCurrentFunction();
     llvm::Value *generateIfStatement(const ResolvedIfStatement &stmt);
     llvm::Value *generateWhileStatement(const ResolvedWhileStatement &whileStmt);
-    
+    llvm::Value *generateDeclStmt(const ResolvedDeclStatement &stmt);
+    llvm::Value *generateAssignment(const ResolvedAssignment &stmt);
+
     void generateBuiltinPrintBody(const ResolvedFunctionDecl &println);
     void generateFunctionDecl(const ResolvedFunctionDecl &functionDecl);
     void generateFunctionBody(const ResolvedFunctionDecl &functionDecl);

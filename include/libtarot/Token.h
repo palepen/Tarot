@@ -14,7 +14,9 @@ const std::unordered_map<std::string_view, TokenType>
         {"number", TokenType::NUMBER},
         {"if", TokenType::IF},
         {"else", TokenType::ELSE},
-        {"while", TokenType::WHILE}
+        {"while", TokenType::WHILE},
+        {"let", TokenType::LET},
+        {"var", TokenType::VAR}
     };
 
 

@@ -48,7 +48,10 @@ public:
     std::unique_ptr<Expression> parsePrefixExpression();
     std::unique_ptr<IfStatement> parseIfStatement();
     std::unique_ptr<WhileStatement> parseWhileStatement();
-    
+    std::unique_ptr<DeclStatement> parseDeclStatement();
+    std::unique_ptr<VarDecl> parseVarDecl(bool isLet);
+    std::unique_ptr<Statement> parseAssignmentOrExpr();
+    std::unique_ptr<Assignment> parseAssignmentRHS(std::unique_ptr<DeclRefExpression> lhs);
     void synchronizeOn(TokenType type);
     void synchronize();
 };
