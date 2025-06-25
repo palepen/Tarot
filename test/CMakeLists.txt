@@ -7,6 +7,7 @@ add_executable(tests
     test_codegen.cpp
     test_operators.cpp
     test_control_flow.cpp
+    test_constexpr.cpp
 )
 
 target_include_directories(tests
